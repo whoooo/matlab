@@ -2,6 +2,9 @@
 % fft_mat = fft(input);
 % mag_mat = abs(fft_mat)/scaling_factor;
 
+% if zeropad = 1, max n_points to send is 4096
+% if zeropad = 0, max n_points is be 8192
+
 %% initialize values and set serial parameters 
 n_points = 2048; % 2048 max
 ram_init = 1; % use stored values from coe file if 1, otherwise use adc

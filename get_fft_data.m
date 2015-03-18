@@ -1,3 +1,4 @@
+%% initialize parameters and get data
 a=1;
 b=1;
 fs= 40000;
@@ -12,6 +13,8 @@ set(s, 'ByteOrder', 'bigEndian');
 fopen(s);
 sdata = fread(s, (2 * n_points), 'int16');
 fclose(s);
+
+%% split real/imag parts, take magnitude
 for i = 1:2:(2*n_points)
     if i == 1
         sdata_im(a) = sdata(i);
@@ -28,6 +31,8 @@ end
 for i = 1:n_points
     fft_mag(i,1) = int16(sqrt(sdata_im(1,i).^2 + sdata_re(1,i).^2));
 end     
+
+%% plots
 subplot(3,1,1);
 plot(fft_index(1:length(fft_index)/2), sdata_re(1:length(sdata_re)/2));
 title('FFT Real Values');
