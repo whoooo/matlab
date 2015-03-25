@@ -1,6 +1,12 @@
+%% compare results of 16 bit input FFT and 32 bit input FFT using same input values (resize 16 bit to 32).
+% use fft_16_32_compare Vivado project
+
 % scaling_factor = 2^sum(scaling_sch);
 % fft_mat = fft(input);
 % mag_mat = abs(fft_mat)/scaling_factor;
+
+% if zeropad = 1, max n_points to send is 4096
+% if zeropad = 0, max n_points is be 8192
 
 %% initialize values and set serial parameters 
 n_points = 2048; % 2048 max

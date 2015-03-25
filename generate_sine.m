@@ -1,4 +1,7 @@
-t = linspace(1, 2048, 2048);
+%% generate quantized sine waves of specific length, frequency, and sample frequency
+
+sinlength = 2048;
+t = linspace(1, sinlength, sinlength);
 f1 = 5000;
 f2 = 5000;
 fs = 40000;

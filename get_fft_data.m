@@ -1,8 +1,10 @@
+%% For use with adc_fft_to_pc2 Vivado project?
+
 %% initialize parameters and get data
 a=1;
 b=1;
 fs= 40000;
-n_points = 2048;
+n_points = 1024;
 fft_index = linspace(1, (fs), n_points);
 n_index = linspace(1, n_points, n_points);
 s = serial('COM6');
