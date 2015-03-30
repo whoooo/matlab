@@ -56,26 +56,25 @@ fclose(s);
 a = 1;
 b = 1;
 fft_mag = zeros(n_points,1);
-fft_mag_shift = zeros(n_points,1);
-sdata_im = zeros(1,n_points);
-sdata_re = zeros(1,n_points);
 
-for i = 1:2:(n_points*2) % *2
-    sdata_im(a) = sdata(i);
-    a = a + 1;
+for i = 1:2:(2*n_points)
+            sdata_im(a) = sdata(i);
+            a = a + 1;
+
+%     if i == 1
+%         sdata_im(a) = sdata(i);
+%         a = a + 1;
+%     else
+%         sdata_im(a) = sdata(i);
+%         a = a + 1;
+%     end
 end
-
-for i = 2:2:(n_points*2) % *2
+for i = 2:2:(2*n_points)
     sdata_re(b) = sdata(i);
     b = b + 1;
 end
-
-sdata_re_shift = fftshift(sdata_re);
-sdata_im_shift = fftshift(sdata_im);
-
 for i = 1:n_points
     fft_mag(i,1) = int16(sqrt(sdata_im(1,i).^2 + sdata_re(1,i).^2));
-    fft_mag_shift(i,1) = int16(sqrt(sdata_im_shift(1,i).^2 + sdata_re_shift(1,i).^2));
 end     
 
 sdata_re_shift = fftshift(sdata_re);
@@ -83,40 +82,22 @@ sdata_im_shift = fftshift(sdata_im);
 
 %% plots
 a = 3;
-b = 1;
+b = 2;
 
 subplot(a,b,1);
-plot(fft_index(1:length(fft_index)), (1/n_points) .* sdata_re(1:length(sdata_re)));
+plot(fft_index(1:length(fft_index)/2), (1/n_points) .* sdata_re(1:length(sdata_re)/2));
 title('FFT Real Values');
 xlabel('Frequency');
 ylabel('Magnitude');
 
-% subplot(a,b,2);
-% plot(fft_index(1:length(fft_index)), (1/n_points) .* sdata_re_shift(1:length(sdata_re_shift)));
-% title('Shifted FFT Real Values');
-% xlabel('Frequency');
-% ylabel('Magnitude');
-
 subplot(a,b,2);
-plot(fft_index(1:length(fft_index)), (1/n_points) .* sdata_im(1:length(sdata_im)));
+plot(fft_index(1:length(fft_index)/2), (1/n_points) .* sdata_im(1:length(sdata_im)/2));
 title('FFT Imaginary Values');
 xlabel('Frequency');
 ylabel('Magnitude');
 
-% subplot(a,b,4);
-% plot(fft_index(1:length(fft_index)), (1/n_points) .* sdata_im_shift(1:length(sdata_im_shift)));
-% title('Shifted FFT Imaginary Values');
-% xlabel('Frequency');
-% ylabel('Magnitude');
-
 subplot(a,b,3);
-plot(fft_index(1:length(fft_index)), (1/n_points) .* fft_mag(1:length(fft_mag)));
+plot(fft_index(1:length(fft_index)/2), (1/n_points) .* fft_mag(1:length(fft_mag)/2));
 title('FFT Magnitude');
 xlabel('Frequency');
 ylabel('Magnitude');
-
-% subplot(a,b,6);
-% plot(fft_index(1:length(fft_index)), (1/n_points) .* fft_mag_shift(1:length(fft_mag_shift)));
-% title('Shifted FFT Magnitude');
-% xlabel('Frequency');
-% ylabel('Magnitude');

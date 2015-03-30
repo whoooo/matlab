@@ -10,6 +10,7 @@ fs = 96000;
 [zlong, fs] = audioread(sampleloc);
 zlongch1 = zlong(:,1);
 zlongch2 = zlong(:,2);
+% z = zlongch1(540000:600000);
 z = zlongch1(1:68000);
 yfft = fft(z,nfft);
 
