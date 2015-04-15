@@ -99,7 +99,7 @@ corr_mat = xcorr(xdata, xdata2);
 corr_man_p = fftshift(ifft(fft(xdatapad).*conj(fft(xdata2pad))));
 
 %% plot results
-
+figure
 %%% plot xdata
 subplot(4,2,1);
 plot(indext, xdata);

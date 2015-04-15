@@ -5,60 +5,76 @@
 
 
 %% initialization
-fs = 100000;
-nfft1 = 4096;
-nfft2 = 4096;
-nfftcrop = 4096;
+%fs = 100000;
+nfft1 = 2048;
+nfft2 = 2048;
+nfftcrop = 2048;
 title1 = sprintf('%.0f  point fft of sample 1' , nfft1);
 title2 = sprintf('%.0f   point fft of sample 2' , nfft2);
-file1loc = 'Z:\jtobin\gunshots\FreeFirearmLibrary\rawLibrary\Walther PPQ\X_32.wav';
-file2loc = 'Z:\jtobin\gunshots\FreeFirearmLibrary\rawLibrary\Walther PPQ\X_33.wav';
+file1loc = 'Z:\jtobin\gunshots\FreeFirearmLibrary\rawLibrary\C_25.wav';
+file2loc = 'Z:\jtobin\gunshots\FreeFirearmLibrary\rawLibrary\C_25.wav'; %s11
 
 %% Read and resample data. 
 
-[y1, fs] = audioread(file1loc);
-[y2, fs] = audioread(file2loc);
+[y1, fs1] = audioread(file1loc);
+[y2, fs2] = audioread(file2loc);
 
 % (:,1) is first channel, (:,2) is second
 y1 = y1(:,1);
-y2 = y2(:,1);
+y2 = y2(:,2);
 
 % Downsample
-fdes = 100000; % desired frequency
-y1 = resample(y1,fdes,fs);
-y2 = resample(y2,fdes,fs);
+fdes = 100000; % desired sampling frequency
+y1 = resample(y1,fdes,fs1);
+y2 = resample(y2,fdes,fs2);
 
 % Play audio
 %sound(y1,fs);
 %sound(y2,fs);
 
-% Shock wave arrive before muzzle blast if projectile passes by mic.
+%% look at shockwave and muzzle blasts
+
+% Shock wave arrives before muzzle blast if supersonic projectile passes by mic.
 % Reflected sounds are included in the following pieces.
 % Each piece should be the same length
-shockstart1 = 105000;
-shockstart2 = 93200;
-muzstart1 = 13680;
-muzstart2 = 4000;
-croplength = 2048;
-y1shock = y1(shockstart1:(shockstart1+croplength));
-y1muz = y1(muzstart1:(muzstart1+croplength));
-y2shock = y2(shockstart2:(shockstart2+croplength));
-y2muz = y2(muzstart2:(muzstart2+croplength));
 
-% y1 = resample(y1,1,40); % downsample from 1Msps to 40ksps
-% y2 = resample(y2,1,40); % downsample from 1Msps to 40ksps
+%R_27
+% shockstart1 = 45200;
+% shockstart2 = 59000;
+% muzstart1 = 57500;
+% muzstart2 = 71000;
 
-% zeropad = transpose(linspace(0, 0, length(y1)));
-% y1 = cat(1,y1,zeropad);
-% y2 = cat(1,y2,zeropad);
+shockstart1 = 79720;
+shockstart2 = 79720;
+muzstart1 = 57500;
+muzstart2 = 71000;
+y1shock = y1(shockstart1:(shockstart1+nfft1));
+y1muz = y1(muzstart1:(muzstart1+nfft1));
+y2shock = y2(shockstart2:(shockstart2+nfft2));
+y2muz = y2(muzstart2:(muzstart2+nfft2));
+
+
+%% save sample 1 shockwave as a fingerprint
+
+% % zero pad sample 
+% 
+% zeropad = transpose(linspace(0, 0, nfft1));
+% y1shockpad = cat(1, y1shock, zeropad);
+% 
+% % save
+% 
+% fingerprint_abs = conj(abs(fft(y1shockpad, 2*nfft1)));
+% save('Z:\jtobin\gunshots\fingerprintLib\R_27_shock_abs_fp.mat', 'fingerprint_abs');
+% fingerprint = conj(fft(y1shockpad, 2*nfft1));
+% save('Z:\jtobin\gunshots\fingerprintLib\R_27_shock_fp.mat', 'fingerprint');
 
 %% Take FFTs
-y1fft = fft(y1,nfft1);
-y2fft = fft(y2,nfft2);
-y1shockfft = fft(y1shock, nfftcrop);
-y1muzfft = fft(y1muz, nfftcrop);
-y2shockfft = fft(y2shock, nfftcrop);
-y2muzfft = fft(y2muz, nfftcrop);
+% y1fft = fft(y1,nfft1);
+% y2fft = fft(y2,nfft2);
+y1shockfft = fft(y1shock, nfft1);
+y1muzfft = fft(y1muz, nfft1);
+y2shockfft = fft(y2shock, nfft2);
+y2muzfft = fft(y2muz, nfft2);
 
 %% Take Cross Correlation and Cross Covariance
 corr = xcorr(y1, y2);
@@ -69,18 +85,25 @@ crosscov = xcov(y1,y2);
 crosscovshock = xcov(y1shock, y2shock);
 crosscovmuz = xcov(y1muz, y2muz);
 
+%% Find spectral power of input signal
+% [psd1,w1] = periodogram(y1);
+% psd2 = periodogram(y2);
+
 %% generate indices
 index_t1 = transpose((1000/fdes).*linspace(1,length(y1),length(y1)));
 index_t2 = transpose((1000/fdes).*linspace(1,length(y2),length(y2)));
 index_f1 = transpose(fdes/2*linspace(0,1,nfft1/2));
 index_f2 = transpose(fdes/2*linspace(0,1,nfft2/2));
-index_shock1 = transpose((1000/fdes).*linspace(shockstart1, shockstart1+croplength+1, croplength+1));
-index_shock2 = transpose((1000/fdes).*linspace(shockstart2, shockstart2+croplength+1, croplength+1));
-index_muz1 = transpose((1000/fdes).*linspace(muzstart1, muzstart1+croplength+1, croplength+1));
-index_muz2 = transpose((1000/fdes).*linspace(muzstart2, muzstart2+croplength+1, croplength+1));
+index_shock1 = transpose((1000/fdes).*linspace(shockstart1, shockstart1+nfft1+1, nfft1+1));
+index_shock2 = transpose((1000/fdes).*linspace(shockstart2, shockstart2+nfft2+1, nfft2+1));
+index_muz1 = transpose((1000/fdes).*linspace(muzstart1, muzstart1+nfft1+1, nfft1+1));
+index_muz2 = transpose((1000/fdes).*linspace(muzstart2, muzstart2+nfft2+1, nfft2+1));
 index_croppedfft = transpose(fdes/2*linspace(0,1,nfftcrop/2));
 index_corr = linspace(1,length(corr),length(corr));
 index_corr_short = linspace(1,length(crosscovshock),length(crosscovshock));
+% index_psd1 = fdes/2 .* w1;
+% index_psd2 = fdes/2 .* linspace(0, length(psd2), length(psd2));
+
 
 %% plot full waveform, muzzleblast, shockwave, and fft of sample 1
 
@@ -97,14 +120,23 @@ grid minor;
 xlabel('Time (mS)');
 ylabel('Amplitude');
 
-% y1 fft
+% y1 psd
 subplot(a,b,2);
-plot(index_f1(1:floor(2*length(index_f1)/5)),abs(y1fft(1:floor(2*length(index_f1)/5)))); 
-%(1:floor(2*length(f1_index)/5)) is 2/5 of fs/2 = 20k if fs = 100k
-title(title1, 'FontWeight', 'bold');
+periodogram(y1);
+% plot(index_psd1, psd1);
+title('Power Spectrum Density', 'FontWeight', 'bold');
 grid minor;
 xlabel('Frequency');
 ylabel('Amplitude');
+
+% % y1 fft
+% subplot(a,b,2);
+% plot(index_f1(1:floor(2*length(index_f1)/5)),abs(y1fft(1:floor(2*length(index_f1)/5)))); 
+% %(1:floor(2*length(f1_index)/5)) is 2/5 of fs/2 = 20k if fs = 100k
+% title(title1, 'FontWeight', 'bold');
+% grid minor;
+% xlabel('Frequency');
+% ylabel('Amplitude');
 
 % y1 shock
 subplot(a,b,3);
@@ -155,14 +187,23 @@ grid minor;
 xlabel('Time (mS)');
 ylabel('Amplitude');
 
-% y2 fft
+% y1 psd
 subplot(a,b,2);
-plot(index_f2(1:floor(2*length(index_f2)/5)), abs(y2fft(1:floor(2*length(index_f2)/5))));
-%(1:floor(2*length(f1_index)/5)) is 2/5 of fs/2 = 20k if fs = 100k
-title(title2, 'FontWeight', 'bold');
+periodogram (y2);
+% plot(index_psd2, psd2);
+title('Power Spectrum Density', 'FontWeight', 'bold');
 grid minor;
 xlabel('Frequency');
 ylabel('Amplitude');
+
+% % y2 fft
+% subplot(a,b,2);
+% plot(index_f2(1:floor(2*length(index_f2)/5)), abs(y2fft(1:floor(2*length(index_f2)/5))));
+% %(1:floor(2*length(f1_index)/5)) is 2/5 of fs/2 = 20k if fs = 100k
+% title(title2, 'FontWeight', 'bold');
+% grid minor;
+% xlabel('Frequency');
+% ylabel('Amplitude');
 
 % y2 shock
 subplot(a,b,3);
