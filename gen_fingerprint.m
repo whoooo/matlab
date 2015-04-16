@@ -7,7 +7,7 @@ clear all
 % samplelength should always be equal to or less than nfft to allow for
 % proper amount of zero padding
 nfft = 4096;
-samplelength = 1024;
+samplelength = 2048;
 file = 'Z:\jtobin\gunshots\FreeFirearmLibrary\rawLibrary\R_27.wav';
 
 %% Read and resample data. 
@@ -73,7 +73,7 @@ y2m_fp = conj(fft(y2muzpad, nfft));
 
 savefiles = 1;
 
-if savefiles == 1
+if savefiles == 0
     save(shock1name, 'y1s_fp');
 %     save(muz1name, 'y1m_fp');
     save(shock2name, 'y2s_fp');
