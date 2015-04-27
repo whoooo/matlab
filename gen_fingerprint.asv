@@ -87,16 +87,15 @@ zeropad = transpose(linspace(0, 0, nfft - samplelength));
 
 y1shockpad = cat(1, y1shock, zeropad);
 
-y1s_f = fft(y1shockpad, nfft);
+y1s_f = conj(fft(y1shockpad, nfft));
 
-y1s_f_half = y1s_f(1:2048);
+y1s_fp = conj(y1s_f);
 
-y1s_fp = conj(y1s_f_half);
 
-savefiles = 1;
+savefiles = 0;
 
-if savefiles == 1
-    save('Z:\jtobin\gunshots\fingerprintLib\R_27_s1_1024_4096_100k_half_freq', 'y1s_fp');
+if savefiles == 0
+    save(shock1name, 'y1s_fp');
 end
 
 

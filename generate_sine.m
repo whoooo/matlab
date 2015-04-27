@@ -1,22 +1,27 @@
 %% generate quantized sine waves of specific length, frequency, and sample frequency
 
-sinlength = 2048;
+sinlength = 512;
 t = linspace(1, sinlength, sinlength);
-f1 = 5000;
-f2 = 5000;
+tlong = linspace(1,sinlength*2,sinlength*2);
+f_incr = linspace(1, 10, sinlength);
+f1 = 500;
+f2 = 9000;
 fs = 40000;
-sin5k = sin(2*pi*f1/fs*t);
-sin7k = sin(2*pi*f2/fs*t);
+sin1 = sin(2*pi*f1/fs*t);
+sin2 = sin(2*pi*f2/fs*t);
+sin_sum = cat(2,sin1,sin2);
 
-quant_sin5k = int16(round(sin5k * 2^15));
-quant_sin7k = int16(round(sin7k * 2^15));
+quant_sin1 = int16(round(sin1 * 2^15));
+quant_sin2 = int16(round(sin2 * 2^15));
+quant_sin_sum = int16(round(sin_sum * 2^15));
 
-%quant_sin1k_h = num2hex(quant_sin1k);
-% for i = 1:1:1024
-%     quant_sin1k_h() = sprintf('%x', typecast(int16(quant_sin1k(1, i)),'uint16'));
-% end
+xdata_fft = fft(sin_sum, 2048);
+indexf = fs/2*linspace(0, 1, sinlength*2);
 
-subplot(2,1,1);
-plot(t(1:512), quant_sin5k(1:512));
-subplot(2,1,2);
-plot(t(1:512), quant_sin7k(1:512));
+% subplot(2,1,1);
+% plot(t(1:512), quant_sin5k(1:512));
+% subplot(2,1,2);
+% plot(t(1:512), quant_sin7k(1:512));
+
+% plot(tlong, sin_sum);
+plot(indexf, abs(xdata_fft(1:length(xdata_fft)/2)));

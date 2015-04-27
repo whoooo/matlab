@@ -4,7 +4,7 @@
 %% initialize parameters and get data
 fs= 40000;
 n_points = 1024;
-ram_initialized = 0;
+ram_initialized = 1;
 fft_index = linspace(1, (fs), n_points);
 n_index = linspace(1, n_points, n_points);
 s = serial('COM6');
@@ -70,16 +70,16 @@ for i = 2:2:(n_points*2) % *2
     b = b + 1;
 end
 
-sdata_re_shift = fftshift(sdata_re);
-sdata_im_shift = fftshift(sdata_im);
+% sdata_re_shift = fftshift(sdata_re);
+% sdata_im_shift = fftshift(sdata_im);
 
 for i = 1:n_points
     fft_mag(i,1) = int16(sqrt(sdata_im(1,i).^2 + sdata_re(1,i).^2));
-    fft_mag_shift(i,1) = int16(sqrt(sdata_im_shift(1,i).^2 + sdata_re_shift(1,i).^2));
+%     fft_mag_shift(i,1) = int16(sqrt(sdata_im_shift(1,i).^2 + sdata_re_shift(1,i).^2));
 end     
 
-sdata_re_shift = fftshift(sdata_re);
-sdata_im_shift = fftshift(sdata_im);
+% sdata_re_shift = fftshift(sdata_re);
+% sdata_im_shift = fftshift(sdata_im);
 
 %% plots
 a = 3;
