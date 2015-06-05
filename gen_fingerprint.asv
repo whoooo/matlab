@@ -1,12 +1,10 @@
 % Read gunshot recording and save set range as a fingerprint
-
 clear all
 
 %% initialization
-
-% samplelength should always be equal to or less than nfft to allow for
+% samplelength should always be equal to or less than n_fft to allow for
 % proper amount of zero padding
-nfft = 4096;
+n_fft = 4096;
 samplelength = 2048;
 file = 'Z:\jtobin\gunshots\FreeFirearmLibrary\rawLibrary\R_27.wav';
 
@@ -25,7 +23,7 @@ y2 = resample(y2,fdes,fs);
 
 %% prepare name string
 
-% save f domain as (sample name)_(shock/muz)(ch1/2)_sampleLength_nfft_fs
+% save f domain as (sample name)_(shock/muz)(ch1/2)_sampleLength_n_fft_fs
 % save t domain as (sample name)_(shock/muz)(ch1/2)_sampleLength_fs
 
 shot_name_ind = strfind(file, '_');
@@ -39,10 +37,8 @@ end
 
 fs_str = num2str(fdes);
 
-shock1nameF = strcat('Z:\jtobin\gunshots\fingerprintLib\f_domain\', shot_name, '_s1_', num2str(samplelength), '_', num2str(nfft), '_', fs_str(1:c), 'k', '.coe');
-shock2nameF = strcat('Z:\jtobin\gunshots\fingerprintLib\f_domain\', shot_name, '_s2_', num2str(samplelength), '_', num2str(nfft), '_', fs_str(1:c), 'k', '.coe');
-muz1nameF = strcat('Z:\jtobin\gunshots\fingerprintLib\f_domain\', shot_name, '_m1_', num2str(samplelength), '_', num2str(nfft), '_', fs_str(1:c), 'k', '.coe');
-muz2nameF = strcat('Z:\jtobin\gunshots\fingerprintLib\f_domain\', shot_name, '_m2_', num2str(samplelength), '_', num2str(nfft), '_', fs_str(1:c), 'k', '.coe');
+shock1nameF = strcat('Z:\jtobin\gunshots\fingerprintLib\f_domain\', shot_name, '_s1_', num2str(samplelength), '_', num2str(n_fft), '_', fs_str(1:c), 'k', '.coe');
+shock2nameF = strcat('Z:\jtobin\gunshots\fingerprintLib\f_domain\', shot_name, '_s2_', num2str(samplelength), '_', num2str(n_fft), '_', fs_str(1:c), 'k', '.coe');
 
 shock1nameT = strcat('Z:\jtobin\gunshots\fingerprintLib\time_domain\', shot_name, '_s1_', num2str(samplelength), '_', fs_str(1:c), 'k', '.coe');
 shock2nameT = strcat('Z:\jtobin\gunshots\fingerprintLib\time_domain\', shot_name, '_s2_', num2str(samplelength), '_', fs_str(1:c), 'k', '.coe');
@@ -54,58 +50,66 @@ shock2nameT = strcat('Z:\jtobin\gunshots\fingerprintLib\time_domain\', shot_name
 
 shockstart1 = 46500;
 shockstart2 = 46400;
-muzstart1 = 54000;
-muzstart2 = 53900;
 
 y1shock = y1(shockstart1:(shockstart1+samplelength-1));
-y1muz = y1(muzstart1:(muzstart1+samplelength-1));
 y2shock = y2(shockstart2:(shockstart2+samplelength-1));
-y2muz = y2(muzstart2:(muzstart2+samplelength-1));
-
 %% save fingerprint
 
-zeropad = transpose(linspace(0, 0, nfft - samplelength));
+% quantize and normalize time domain signal
+y1shock_quant = double(int16(y1shock/max(abs(y1shock)).*32768));
+y2shock_quant = double(int16(y2shock/max(abs(y2shock)).*32768));
 
 % zero pad sample to at least twice its length
-y1shockpad = cat(1, y1shock, zeropad);
-y1muzpad = cat(1, y1muz, zeropad);
-y2shockpad = cat(1, y2shock, zeropad);
-y2muzpad = cat(1, y2muz, zeropad);
+zeropad = transpose(linspace(0, 0, n_fft - samplelength));
+y1shockpad = cat(1,y1shock,zeropad);
+y2shockpad = cat(1,y2shock,zeropad);
+y1shockpad_quant = cat(1,y1shock_quant,zeropad);
+y2shockpad_quant = cat(1,y2shock_quant,zeropad);
 
 % take complex conjugate of fft
-y1s_fp_f = conj(fft(y1shockpad, nfft));
-y1m_fp_f = conj(fft(y1muzpad, nfft));
-y2s_fp_f = conj(fft(y2shockpad, nfft));
-y2m_fp_f = conj(fft(y2muzpad, nfft));
+y1shock_fp = conj(fft(y1shockpad, n_fft));
+y2shock_fp = conj(fft(y2shockpad, n_fft));
 
-% normalize and quantize the complex conjugate of fft data
-y1s_fp_norm = y1s_fp_f/abs(max(y1s_fp_f));
-y1s_fp_quant = int16(y1s_fp_norm .*32768);
-y2s_fp_norm = y2s_fp_f/abs(max(y2s_fp_f));
-y2s_fp_quant = int16(y2s_fp_norm .*32768);
+% quantize the complex conjugate of the fft of quantized time domain signal
+y1shock_fp_quant = conj(fft(y1shockpad_quant, n_fft));
+y2shock_fp_quant = conj(fft(y2shockpad_quant, n_fft));
+y1shock_fp_quant = double(int16(y1shock_fp_quant/max(abs(y1shock_fp_quant)).*32768));
+y2shock_fp_quant = double(int16(y2shock_fp_quant/max(abs(y2shock_fp_quant)).*32768));
 
-% %  compare normalized and quantized version of y1 fingerprint to original
-% figure;
-% subplot(2,1,1)
-% plot(real(y1s_fp_f));
-% subplot(2,1,2)
-% plot(real(y1s_fp_quant));
+%  compare normalized and quantized version of y1 fingerprint to original
+plot_section = 0;
+if plot_section == 1    
+    figure;
+    subplot(2,1,1)
+    plot(abs(y1shock_fp));
+    title('Y1S FFT');
+    subplot(2,1,2)
+    plot(abs(y1shock_fp_quant));
+    title('Y1S FFT quantized');
+end;
+
+% compare ifft of quantized fingerprints to original signal
+plot_section = 1;
+if plot_section == 1
+    figure;
+    subplot(2,1,1)
+    plot(linspace(1, length(y1shock_quant), length(y1shock_quant)),y1shock_quant);
+    title('Y1 Time Domain');
+    subplot(2,1,2)
+    ifft_y1 = ifftshift(ifft(y1shock_fp_quant));
+    plot(linspace(1, length(y1shock_quant), length(y1shock_quant)), flip(ifft(y1shock_fp_quant)));
+    title('Y1 Quantized IFFT Time Domain');
+end;
 
 % concatenate real and imaginary parts of fingerprint
-y1s_fp_real_bin = dec2bin(typecast(int16(real(y1s_fp_quant)),'uint16'));
-y2s_fp_real_bin = dec2bin(typecast(int16(real(y2s_fp_quant)),'uint16'));
-y1s_fp_imag_bin = dec2bin(typecast(int16(imag(y1s_fp_quant)),'uint16'));
-y2s_fp_imag_bin = dec2bin(typecast(int16(imag(y2s_fp_quant)),'uint16'));
+y1shock_fp_real_bin = dec2bin(typecast(int16(real(y1shock_fp_quant)),'uint16'));
+y2shock_fp_real_bin = dec2bin(typecast(int16(real(y2shock_fp_quant)),'uint16'));
+y1shock_fp_imag_bin = dec2bin(typecast(int16(imag(y1shock_fp_quant)),'uint16'));
+y2shock_fp_imag_bin = dec2bin(typecast(int16(imag(y2shock_fp_quant)),'uint16'));
 
-y1s_fp = cell2mat(strcat(y1s_fp_imag_bin, y1s_fp_real_bin, {' '}));
-y2s_fp = cell2mat(strcat(y2s_fp_imag_bin, y2s_fp_real_bin, {' '}));
+y1s_fp = cell2mat(strcat(y1shock_fp_imag_bin, y1shock_fp_real_bin, {' '}));
+y2s_fp = cell2mat(strcat(y2shock_fp_imag_bin, y2shock_fp_real_bin, {' '}));
     
-
-
-% convert time domain sample to 16 bit int
-y1s_t = int16(y1shock.*32768);
-y2s_t = int16(y2shock.*32768);
-
 savefiles = 1;
 
 if savefiles == 1
@@ -123,13 +127,13 @@ if savefiles == 1
     
     f_y1s_t = fopen(shock1nameT, 'wt');
     fprintf(f_y1s_t, '%s\n', 'memory_initialization_radix=10;', 'memory_initialization_vector= ');
-    fprintf(f_y1s_t, '%i ', y1s_t);
+    fprintf(f_y1s_t, '%i ', y1shock_quant);
     fprintf(f_y1s_t, '%c', ';');
     fclose(f_y1s_t);
     
     f_y2s_t = fopen(shock2nameT, 'wt');
     fprintf(f_y2s_t, '%s\n', 'memory_initialization_radix=10;', 'memory_initialization_vector= ');
-    fprintf(f_y2s_t, '%i ', y2s_t);
+    fprintf(f_y2s_t, '%i ', y2shock_quant);
     fprintf(f_y2s_t, '%c', ';');
     fclose(f_y2s_t);   
 end
@@ -137,11 +141,11 @@ end
 %% save half of sample 1 spectrum as fingerprint
 
 % % zero pad sample to at least twice its length
-% zeropad = transpose(linspace(0, 0, nfft - samplelength));
+% zeropad = transpose(linspace(0, 0, n_fft - samplelength));
 % 
 % y1shockpad = cat(1, y1shock, zeropad);
 % 
-% y1s_f = fft(y1shockpad, nfft);
+% y1s_f = fft(y1shockpad, n_fft);
 % 
 % y1s_f_half = y1s_f(1:2048);
 % 
@@ -157,12 +161,12 @@ end
 %% generate indices
 
 index_t = transpose(linspace(1,length(y1),length(y1)));
-index_f1 = transpose(fdes/2*linspace(0,1,nfft/2));
-index_f2 = transpose(fdes/2*linspace(0,1,nfft/2));
+index_f1 = transpose(fdes/2*linspace(0,1,n_fft/2));
+index_f2 = transpose(fdes/2*linspace(0,1,n_fft/2));
 index_shock1 = transpose(linspace(shockstart1, shockstart1+samplelength, samplelength));
 index_shock2 = transpose(linspace(shockstart2, shockstart2+samplelength, samplelength));
-index_muz1 = transpose(linspace(muzstart1, muzstart1+samplelength, samplelength));
-index_muz2 = transpose(linspace(muzstart2, muzstart2+samplelength, samplelength));
+% index_muz1 = transpose(linspace(muzstart1, muzstart1+samplelength, samplelength));
+% index_muz2 = transpose(linspace(muzstart2, muzstart2+samplelength, samplelength));
 
 %% plot scaled and unscaled ffts
 % 

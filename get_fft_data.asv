@@ -70,12 +70,16 @@ for i = 2:2:(n_points*2) % *2
     b = b + 1;
 end
 
-fpga_fft = sdata_re + (sdata_im.*1j);
+fpga_fft = sdata_re .+ (sdata_im.*1j);
 fpga_fft_conj = conj(fpga_fft);
 
+
+% sdata_re_shift = fftshift(sdata_re);
+% sdata_im_shift = fftshift(sdata_im);
+
 for i = 1:n_points
-    fft_mag(i,1) = sqrt(sdata_im(1,i).^2 + sdata_re(1,i).^2);
-%     fft_mag_shift(i,1) = sqrt(sdata_im_shift(1,i).^2 + sdata_re_shift(1,i).^2);
+    fft_mag(i,1) = double(int16(sqrt(sdata_im(1,i).^2 + sdata_re(1,i).^2));
+    fft_mag_shift(i,1) = doubleint16(sqrt(sdata_im_shift(1,i).^2 + sdata_re_shift(1,i).^2));
 end     
 
 % sdata_re_shift = fftshift(sdata_re);
@@ -92,11 +96,11 @@ title('FFT Magnitude');
 xlabel('Frequency');
 ylabel('Magnitude');
 
-% subplot(a,b,2);
-% plot(fft_index(1:length(fft_index)), (1/n_points) .* fft_mag_shift(1:length(fft_mag_shift)));
-% title('Shifted FFT Magnitude');
-% xlabel('Frequency');
-% ylabel('Magnitude');
+subplot(a,b,2);
+plot(fft_index(1:length(fft_index)), (1/n_points) .* fft_mag_shift(1:length(fft_mag_shift)));
+title('Shifted FFT Magnitude');
+xlabel('Frequency');
+ylabel('Magnitude');
 
 
 %% plots
