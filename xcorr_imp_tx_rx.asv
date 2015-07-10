@@ -107,7 +107,7 @@ set(s, 'Timeout', 10);
 set(s, 'ByteOrder', 'bigEndian');
 fopen(s);
 fwrite(s, cmd, 'uint8');
-sdata = fread(s, (n_fft*2), 'int32'); % 32 bits of [n_fft_points * 2 (real+imag components)] values
+sdata = fread(s, (n_fft*2), 'int32'); % 32 bits * n_fft_points * 2 (real+imag components)
 cmd = bin2dec(strcat('0', ram_initialized, n_points_b, n_fft_b));
 fwrite(s,cmd,'uint8');
 fclose(s);
@@ -119,12 +119,12 @@ corr_fpga = zeros(n_fft,1);
 sdata_im = zeros(1,n_fft);
 sdata_re = zeros(1,n_fft);
 
-for i = 1:2:(n_fft*2) 
+for i = 1:2:(n_fft) 
     sdata_im(a) = sdata(i);
     a = a + 1;
 end
 
-for i = 2:2:(n_fft*2) 
+for i = 2:2:(n_fft) 
     sdata_re(b) = sdata(i);
     b = b + 1;
 end
@@ -172,8 +172,6 @@ title('Manual xcorr- quantized');
 grid on;
 subplot(3,1,3);
 plot(index_corr, flip(fftshift(corr_fpga)));
-% plot(index_corr, corr_fpga);
-
 grid on;
 title('FPGA xcorr');
 

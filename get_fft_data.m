@@ -11,7 +11,7 @@ s = serial('COM6');
 set(s, 'BaudRate', 115200);
 set(s, 'InputBufferSize', (2*2*n_points)); % 16 bit fft -> 2 bytes real + 2 bytes imag
 set(s, 'OutputBufferSize', 1); % 1 byte command 
-set(s, 'Timeout', 10);
+set(s, 'Timeout', 5);
 set(s, 'ByteOrder', 'bigEndian');
 
 %% convert values to binary representation

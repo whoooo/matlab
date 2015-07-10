@@ -4,6 +4,7 @@
 %% initialize parameters and get data
 fs= 100000;
 n_points = 4096;
+n_samples = 2048;
 ram_initialized = 1;
 fft_index = linspace(1, (fs), n_points);
 n_index = linspace(1, n_points, n_points);
@@ -11,10 +12,48 @@ s = serial('COM6');
 set(s, 'BaudRate', 115200);
 set(s, 'InputBufferSize', (2*2*n_points)); % 16 bit fft -> 2 bytes real + 2 bytes imag
 set(s, 'OutputBufferSize', 1); % 1 byte command 
-set(s, 'Timeout', 10);
+set(s, 'Timeout', 5);
 set(s, 'ByteOrder', 'bigEndian');
 
-%% convert values to binary representation
+%% get matlab generated results to compare
+
+sample = 'Z:\jtobin\gunshots\FreeFirearmLibrary\rawLibrary\R_27.wav'; %s11
+[y, fs_orig] = audioread(sample);
+
+% (:,1) is first channel, (:,2) is second
+ych1 = y(:,1);
+ych2 = y(:,2);
+
+% Downsample
+ych1 = resample(ych1,fs,fs_orig);
+ych2 = resample(ych2,fs,fs_orig);
+
+% cut samples down
+shockstart1 = 46500;
+shockstart2 = 46400;
+y1shock = ych1(shockstart1:(shockstart1+n_samples-1));
+y2shock = ych2(shockstart2:(shockstart2+n_samples-1));
+
+% quantize and normalize time domain signal
+y1shock_quant = double(int16(y1shock/max(abs(y1shock)).*32768));
+y2shock_quant = double(int16(y2shock/max(abs(y2shock)).*32768));
+
+% zero pad sample to at least twice its length
+zeropad = transpose(linspace(0, 0, n_points - n_samples));
+y1shockpad_quant = cat(1,y1shock_quant,zeropad);
+y2shockpad_quant = cat(1,y2shock_quant,zeropad);
+y1shockpad = cat(1,y1shock,zeropad);
+y2shockpad = cat(1,y2shock,zeropad);
+
+% fft of original signal
+y1s_fft = fft(y1shockpad, n_points);
+y2s_fft = fft(y2shockpad, n_points);
+
+% fft of quantized signal
+y1s_quant_fft = fft(y1shockpad_quant, n_points);
+y2s_quant_fft = fft(y2shockpad_quant, n_points);
+
+%% convert command values to binary representation
 % see page 45 of fft doc for values
 if n_points == 512
     n_points_b = 1001;
@@ -45,7 +84,7 @@ cmdrun = bin2dec(strcat(num2str(1), num2str(fs_b), num2str(ram_initialized), num
 cmdrst = bin2dec(strcat(num2str(0), num2str(fs_b), num2str(ram_initialized), num2str(0), num2str(n_points_b)));
 
 
-%% send command, then receive data
+%% send command and wait for data
 fopen(s);
 fwrite(s, cmdrun, 'uint8');
 sdata = fread(s, (2 * n_points), 'int16'); % 
@@ -70,16 +109,12 @@ for i = 2:2:(n_points*2) % *2
     b = b + 1;
 end
 
-fpga_fft = sdata_re .+ (sdata_im.*1j);
+fpga_fft = sdata_re + (sdata_im.*1j);
 fpga_fft_conj = conj(fpga_fft);
 
-
-% sdata_re_shift = fftshift(sdata_re);
-% sdata_im_shift = fftshift(sdata_im);
-
 for i = 1:n_points
-    fft_mag(i,1) = double(int16(sqrt(sdata_im(1,i).^2 + sdata_re(1,i).^2));
-    fft_mag_shift(i,1) = doubleint16(sqrt(sdata_im_shift(1,i).^2 + sdata_re_shift(1,i).^2));
+    fft_mag(i,1) = sqrt(sdata_im(1,i).^2 + sdata_re(1,i).^2);
+%     fft_mag_shift(i,1) = sqrt(sdata_im_shift(1,i).^2 + sdata_re_shift(1,i).^2);
 end     
 
 % sdata_re_shift = fftshift(sdata_re);
@@ -87,20 +122,34 @@ end
 
 %% gunshot plots
 figure
-a= 2;
+a= 3;
 b= 1;
 
-subplot(a,b,1);
-plot(fft_index(1:length(fft_index)), (1/n_points) .* fft_mag(1:length(fft_mag)));
-title('FFT Magnitude');
-xlabel('Frequency');
-ylabel('Magnitude');
+% subplot(a,b,1);
+% plot(fft_index(1:length(fft_index)/2), (1/n_points) .* abs(fpga_fft(1:length(fpga_fft)/2)), 'g', ...
+%     fft_index(1:length(fft_index)/2), abs(y1s_quant_fft(1:length(y1s_quant_fft)/2)), 'b' );
+% title('FFT Magnitude');
+% xlabel('Frequency');
+% ylabel('Magnitude');
 
+subplot(a,b,1);
+plot(fft_index(1:length(fft_mag)/5), abs(fpga_fft(1:length(fft_mag)/5)))
+title('FPGA FFT');
 subplot(a,b,2);
-plot(fft_index(1:length(fft_index)), (1/n_points) .* fft_mag_shift(1:length(fft_mag_shift)));
-title('Shifted FFT Magnitude');
-xlabel('Frequency');
-ylabel('Magnitude');
+plot(fft_index(1:length(fft_index)/5), abs(y1s_quant_fft(1:length(y1s_quant_fft)/5)) );
+title('Matlab Quantized FFT');
+subplot(a,b,3);
+plot(fft_index(1:length(fft_index)/5), abs(y1s_fft(1:length(y1s_fft)/5)) );
+title('Matlab FFT');
+
+% figure 
+% plot(fft_index(1:length(fft_index)/2), abs(y1s_quant_fft(1:length(y1s_quant_fft)/2)));
+
+% subplot(a,b,2);
+% plot(fft_index(1:length(fft_index)), (1/n_points) .* fft_mag_shift(1:length(fft_mag_shift)));
+% title('Shifted FFT Magnitude');
+% xlabel('Frequency');
+% ylabel('Magnitude');
 
 
 %% plots

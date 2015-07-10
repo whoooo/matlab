@@ -7,12 +7,12 @@
 
 nfft = 4096; % actual number of samples taken will be 1/2 this, due to zero padding
 fs = 100000; % desired sampling frequency
-fingerprint = load('Z:\jtobin\gunshots\fingerprintLib\R_27_s1_1024_4096_100k.mat');
-fingerprint_half = load('Z:\jtobin\gunshots\fingerprintLib\R_27_s1_1024_4096_100k_half_freq.mat');
+fingerprint = load('Z:\jtobin\gunshots\fingerprintLib\f_domain\mat_files\R_27_s1_2048_4096_100k.txt');
+% fingerprint_half = load('Z:\jtobin\gunshots\fingerprintLib\R_27_s1_1024_4096_100k_half_freq.mat');
 sample = 'Z:\jtobin\gunshots\FreeFirearmLibrary\rawLibrary\R_27.wav'; %s11
 
-fingerprint = fingerprint.y1s_fp; 
-fingerprint_half = fingerprint_half.y1s_fp;
+% fingerprint = fingerprint.y1s_fp; 
+% fingerprint_half = fingerprint_half.y1s_fp;
 
 
 %% Read and resample data. 
