@@ -150,7 +150,7 @@ title('Matlab FFT');
 
 figure 
 
-plot(fft_index(1:length(fft_mag)/5), abs(fpga_fft(1:length(fft_mag)/5)), 'r' , fft_index(1:length(fft_index)/5), abs(y1s_quant_fft(1:length(y1s_quant_fft)/5))/scale*2 , 'b');
+plot(fft_index(1:length(fft_mag)/5), abs(fpga_fft(1:length(fft_mag)/5)), 'r' , fft_index(1:length(fft_index)/5), abs(y1s_quant_fft(1:length(y1s_quant_fft)/5))/scale2 , 'b');
 legend('FPGA FFT', 'Matlab FFT')
 
 % figure 
