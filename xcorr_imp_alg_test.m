@@ -1,109 +1,88 @@
 % Cross correlation based matching algorithm test using free firearm library sounds                        
-% Uses fingerprints generated in gunshot_audio_read.m
+% Uses fingerprints generated from gen_fingerprint
 
-% clear all
+clear all
 
 %% initialization
 
 nfft = 4096; % actual number of samples taken will be 1/2 this, due to zero padding
-fs = 100000; % desired sampling frequency
-fingerprint = load('Z:\jtobin\gunshots\fingerprintLib\f_domain\mat_files\R_27_s1_2048_4096_100k.txt');
-% fingerprint_half = load('Z:\jtobin\gunshots\fingerprintLib\R_27_s1_1024_4096_100k_half_freq.mat');
+fs = 48000; % desired sampling frequency
+add_noise = 1;
+
+% gunshot files
+fingerprint = load('Z:\jtobin\gunshots\fingerprintLib\f_domain\mat_files\R_27_s1_2048_4096_48k.txt');
+fingerprint = fingerprint(:,1) + 1j.*fingerprint(:,2); % combine real and imaginary components 
 sample = 'Z:\jtobin\gunshots\FreeFirearmLibrary\rawLibrary\R_27.wav'; %s11
 
-% fingerprint = fingerprint.y1s_fp; 
-% fingerprint_half = fingerprint_half.y1s_fp;
+% additional noise file
+[z, fs_origZ] = audioread('Z:\jtobin\other_sounds\milan_traffic.wav');
+
 
 
 %% Read and resample data. 
 
-[y, fs_orig] = audioread(sample);
+[y, fs_origY] = audioread(sample);
 
 % (:,1) is first channel, (:,2) is second
-ych1 = y(:,1);
-ych2 = y(:,2);
-
 % Downsample
-ych1 = resample(ych1,fs,fs_orig);
-ych2 = resample(ych2,fs,fs_orig);
+ych1 = resample(y(:,1),fs,fs_origY);
+ych2 = resample(y(:,2),fs,fs_origY);
+% ych1 = awgn(ych1, 20);
 
-%% "slide" sample across window and check correlation
-% correlation = ifft(fft(xdatapad).*conj(fft(xdata2pad)));
-% add threshold and count number of detections?
-% sample length is half of nfft length to allow for zero padding
-max1 = 0;
-max2 = 0;
-ch1count = 0;
-ch2count = 0;
-corrthresh = 5;
+zch1 = resample(z(:,1), fs, fs_origZ);
+zch2 = resample(z(:,2), fs, fs_origZ);
+
+zch1 = zch1(1:length(ych1));
+zch2 = zch2(1:length(ych1));
+
+
+if add_noise == 1
+    ych1 = normalize(ych1,1) + normalize(zch1, .5);
+    ych2 = normalize(ych2,1) + normalize(zch2, .5);
+end
+
+% plot( linspace(1,length(zch1),length(zch1)), zch1);
+
+%% threshold based correlation detection
+
+corrthresh = 10000;
+corr_count1 = 1;
+corr_count2 = 1;
 zeropad = transpose(linspace(0, 0, nfft/2));
 
-for i = 0 : 1 : (floor(length(ych1)/nfft) - 1) 
+for k = 0 : 1 : (2*floor(length(ych1)/nfft) - 1) 
     
-    sample1 = ych1((i*nfft/2 + 1):((i+1)*nfft/2));
+    sample1 = ych1((k*nfft/2 + 1):((k+1)*nfft/2));
     sample1pad = cat(1, sample1, zeropad);  
-%     corr1 = xcorr(sample1, y1shock);
-    sample1_fft = fft(sample1pad,nfft);
-    sample1_prod = sample1_fft.*fingerprint;
-    corr1 = ifft(sample1_prod);   
-    if max(corr1) > max1 
-        max1 = max(corr1);
-        match_sample1 = sample1;
-        match_corr1 = corr1;
-        match_i1 = i;
+    sample1pad_f = fft(sample1pad, nfft);
+    corr1 = ifft(sample1pad_f.*fingerprint); 
+    if max(corr1) > corrthresh
+        matches_index1(:,corr_count1) = (k*nfft/2 + 1) : ((k+1)*nfft/2); % time indices of matches
+        matches_corr1(:,corr_count1) = corr1; % matching correlations
+        index_corr1(:,corr_count1) = (k*nfft/2 + 1) : ((k+1)*nfft/2 + nfft/2); % indices for matching correlations
+        matches_sample1(:,corr_count1) = sample1; % matching t data
+        matches_fft1(:,corr_count1) = sample1pad_f; % matching f data
+        corr_count1 = corr_count1 + 1;
     end;   
     
-    sample2 = ych2((i*nfft/2 + 1):((i+1)*nfft/2));
+    sample2 = ych2((k*nfft/2 + 1):((k+1)*nfft/2));
     sample2pad = cat(1, sample2, zeropad);  
-%     corr2 = xcorr(sample2, y2shock);
-    corr2 = ifft(fft(sample2pad,nfft).*fingerprint); 
-    if max(corr2) > max2 
-        max2 = max(corr2);
-        match_sample2 = sample2;
-        match_corr2 = corr2;
-        match_i2 = i;
+    sample2pad_f = fft(sample2pad,nfft);
+    corr2 = ifft(sample2pad_f.*fingerprint); 
+    if max(corr2) > corrthresh 
+        matches_index2(:,corr_count2) = ((k*nfft/2 + 1):((k+1)*nfft/2));
+        matches_corr2(:,corr_count2) =  corr2;
+        index_corr2(:,corr_count2) = (k*nfft/2 + 1) : ((k+1)*nfft/2 + nfft/2); 
+        matches_sample2(:,corr_count2) = sample2;
+        matches_fft2(:,corr_count2) = sample2pad_f;
+        corr_count2 = corr_count2 + 1;
     end; 
 
 end;
 
-%% "slide" sample across window and check correlation using half spectrum
-% correlation = ifft(fft(xdatapad).*conj(fft(xdata2pad)));
-% add threshold and count number of detections?
-% sample length is half of nfft length to allow for zero padding
-max_half = 0;
-zeropad_half = transpose(linspace(0, 0, nfft/2));
-
-for i = 0 : 1 : (floor(length(ych1)/nfft) - 1) 
-    
-    sample1 = ych1((i*nfft/2 + 1):((i+1)*nfft/2));
-    sample1pad = cat(1, sample1, zeropad);
-    samp1_f = fft(sample1pad,nfft);
-    samp1_f_half = samp1_f(1:2048);
-    corr1_half = ifft(samp1_f_half.*fingerprint_half);   
-    if max(corr1_half) > max_half
-        max_half = max(corr1_half);
-        match_sample1_half = sample1;
-        match_corr1_half = corr1_half;
-        match_i1_half = i;
-    end;   
-    
-end;
-
-%% take fft of sample to inspect f domain
-match_f1 = abs(fft(match_sample1, nfft));
-match_f2 = abs(fft(match_sample2, nfft));
-match_half = abs(fft(match_sample1_half, nfft));
-
 %% generate indices
-index_t1 = transpose((1000/fs).*linspace(1,length(ych1),length(ych1)));
-index_t2 = transpose((1000/fs).*linspace(1,length(ych1),length(ych1)));
-index_fp_f = transpose(fs/2*linspace(0,1,nfft));
-index_match1 = transpose((1000/fs).*linspace(match_i1*nfft/2 + 1, (match_i1 + 1)*nfft/2, nfft/2));
-index_match2 = transpose((1000/fs).*linspace(match_i2*nfft/2 + 1, (match_i2 + 1)*nfft/2, nfft/2));
-index_match_half = transpose((1000/fs).*linspace(match_i1_half*nfft/2 + 1, (match_i1_half + 1)*nfft/2, nfft/2));
-index_corr1 = transpose(linspace(1,length(match_corr1),length(match_corr1)));
-index_corr2 = transpose(linspace(1,length(match_corr1),length(match_corr1)));
-index_corr_half = transpose(linspace(1,length(match_corr1_half),length(match_corr1_half)));
+index_t = linspace(1,length(ych1),length(ych1));
+index_f = transpose(fs/2*linspace(0,1,nfft));
 index_fp = transpose(linspace(1,length(fingerprint),length(fingerprint)));
 
 
@@ -112,22 +91,23 @@ figure;
 a = 3;
 b = 2;
 
-% ych1
+% ych1 time domain
 subplot(a,b,[1,2]);
-plot(index_t1,ych1, 'b', index_match1, match_sample1, 'r');
+plot(index_t, ych1, 'b',...
+    matches_index1, matches_sample1, 'r');
 title('\bf Channel 1');
 grid on;
+xlim([1 length(ych1)])
 xlabel('Index');
 ylabel('Amplitude');
 
-% fingerprint f domain
+% correlation at match
 subplot(a,b,[3,4]);
-% plot(index_fp_f,abs(fingerprint(1:length(fingerprint)/2)));
-plot(index_fp_f(1:floor(2*length(index_fp_f)/5)), abs(fingerprint(1:floor(2*length(index_fp_f)/5))), 'b', index_fp_f(1:floor(2*length(index_fp_f)/5)), match_f1(1:floor(2*length(index_fp_f)/5)), 'r');
-% plot(index_fp_f(1:floor(2*length(index_fp_f)/5)), abs(fingerprint(1:floor(2*length(index_fp_f)/5))));
-title('\bf Fingerprint/Match FFT');
+plot(index_corr1, matches_corr1);
+title('\bf Correlation at match');
 grid on;
-xlabel('Frequency');
+xlim([1 length(ych1)])
+xlabel('Correlation index');
 ylabel('Amplitude');
 
 % fingerprint t domain
@@ -138,36 +118,37 @@ grid on;
 xlabel('Sample index');
 ylabel('Amplitude');
 
-% correlation at match
+% fingerprint f domain
 subplot(a,b,6);
-plot(index_corr1,match_corr1);
-title('\bf Correlation at match');
+plot(index_f(1:floor(2*length(index_f)/5)), abs(normalize(fingerprint(1:floor(2*length(index_f)/5)),1)), 'b',...
+    index_f(1:floor(2*length(index_f)/5)), abs(normalize(matches_fft1(1:floor(2*length(index_f)/5)),1)), 'r');
+title('\bf Fingerprint/Match FFT');
 grid on;
-xlabel('Correlation index');
+xlabel('Frequency');
 ylabel('Amplitude');
-
-
 
 %% plot ch2 results
 figure;
 a = 3;
 b = 2;
 
-% ych2
+% ych2 time domain
 subplot(a,b,[1,2]);
-plot(index_t1,ych2, 'b', index_match2, match_sample2, 'r');
+plot(index_t, ych2, 'b',...
+    matches_index2, matches_sample2, 'r');
 title('\bf Channel 2');
 grid on;
+xlim([1 length(ych2)])
 xlabel('Index');
 ylabel('Amplitude');
 
-% fingerprint and match f domain
+% correlation at match
 subplot(a,b,[3,4]);
-% plot(index_fp_f,abs(fingerprint(1:length(fingerprint)/2)));
-plot(index_fp_f(1:floor(2*length(index_fp_f)/5)), abs(fingerprint(1:floor(2*length(index_fp_f)/5))), 'b', index_fp_f(1:floor(2*length(index_fp_f)/5)), match_f2(1:floor(2*length(index_fp_f)/5)), 'r');
-title('\bf Fingerprint/Match FFT');
+plot(index_corr2, matches_corr2);
+title('\bf Correlation at match');
 grid on;
-xlabel('Frequency');
+xlim([1 length(ych2)])
+xlabel('Correlation index');
 ylabel('Amplitude');
 
 % fingerprint t domain
@@ -178,33 +159,36 @@ grid on;
 xlabel('Sample index');
 ylabel('Amplitude');
 
-% correlation at match
+% fingerprint f domain
 subplot(a,b,6);
-plot(index_corr2,match_corr2);
-title('\bf Correlation at match');
+plot(index_f(1:floor(2*length(index_f)/5)), abs(normalize(fingerprint(1:floor(2*length(index_f)/5)),1)), 'b',...
+    index_f(1:floor(2*length(index_f)/5)), abs(normalize(matches_fft2(1:floor(2*length(index_f)/5)),1)), 'r');
+title('\bf Fingerprint/Match FFT');
 grid on;
-xlabel('Correlation index');
+xlabel('Frequency');
 ylabel('Amplitude');
 
-%% plot half spectrum results
 
+%% plot ch2 results
 % figure;
 % a = 3;
 % b = 2;
 % 
-% % ych1
+% % ych2
 % subplot(a,b,[1,2]);
-% plot(index_t1,ych1, 'b', index_match_half, match_sample1_half, 'r');
-% title('\bf Channel 1');
+% plot(index_t, ych1, 'b',...
+%     matches_index2, matches_sample2, 'r');
+% title('\bf Channel 2');
 % grid on;
+% xlim([1 length(ych2)])
 % xlabel('Index');
 % ylabel('Amplitude');
 % 
 % % fingerprint and match f domain
 % subplot(a,b,[3,4]);
-% % plot(index_fp_f,abs(fingerprint(1:length(fingerprint)/2)));
-% plot(index_fp_f(1:floor(2*length(index_fp_f)/5)), abs(fingerprint(1:floor(2*length(index_fp_f)/5))), 'b', index_fp_f(1:floor(2*length(index_fp_f)/5)), match_half(1:floor(2*length(index_fp_f)/5)), 'r');
-% title('\bf Half Spectrum Fingerprint/Match FFT');
+% plot(index_f(1:floor(2*length(index_f)/5)), abs(fingerprint(1:floor(2*length(index_f)/5))), 'b',...
+%     index_f(1:floor(2*length(index_f)/5)), match_f2(1:floor(2*length(index_f)/5)), 'r');
+% title('\bf Fingerprint/Match FFT');
 % grid on;
 % xlabel('Frequency');
 % ylabel('Amplitude');
@@ -218,10 +202,10 @@ ylabel('Amplitude');
 % ylabel('Amplitude');
 % 
 % % correlation at match
-% subplot(a,b,6);
-% plot(index_corr_half,match_corr1_half);
-% title('\bf Half Spectrum Correlation at match');
-% grid on;
-% xlabel('Correlation index');
-% ylabel('Amplitude');
+% % subplot(a,b,6);
+% % plot(index_corr2,match_corr2);
+% % title('\bf Correlation at match');
+% % grid on;
+% % xlabel('Correlation index');
+% % ylabel('Amplitude');
 

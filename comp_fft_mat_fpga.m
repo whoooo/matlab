@@ -5,14 +5,14 @@ clear all
 
 %% initialize parameters and get data
 fs= 100000;
-n_points = 4096;
+n_fft = 4096;
 n_samples = 2048;
 ram_initialized = 1;
-fft_index = linspace(1, (fs), n_points);
-n_index = linspace(1, n_points, n_points);
+fft_index = linspace(1, (fs), n_fft);
+n_index = linspace(1, n_fft, n_fft);
 s = serial('COM6');
 set(s, 'BaudRate', 115200);
-set(s, 'InputBufferSize', (2*2*n_points)); % 16 bit fft -> 2 bytes real + 2 bytes imag
+set(s, 'InputBufferSize', (2*2*n_fft)); % 16 bit fft -> 2 bytes real + 2 bytes imag
 set(s, 'OutputBufferSize', 1); % 1 byte command 
 set(s, 'Timeout', 5);
 set(s, 'ByteOrder', 'bigEndian');
@@ -41,35 +41,35 @@ y1shock_quant = double(int16(y1shock/max(abs(y1shock)).*32768));
 y2shock_quant = double(int16(y2shock/max(abs(y2shock)).*32768));
 
 % zero pad sample to at least twice its length
-zeropad = transpose(linspace(0, 0, n_points - n_samples));
+zeropad = transpose(linspace(0, 0, n_fft - n_samples));
 y1shockpad_quant = cat(1,y1shock_quant,zeropad);
 y2shockpad_quant = cat(1,y2shock_quant,zeropad);
 y1shockpad = cat(1,y1shock,zeropad);
 y2shockpad = cat(1,y2shock,zeropad);
 
 % fft of original signal
-y1s_fft = fft(y1shockpad, n_points);
-y2s_fft = fft(y2shockpad, n_points);
+y1s_fft = fft(y1shockpad, n_fft);
+y2s_fft = fft(y2shockpad, n_fft);
 
 % fft of quantized signal
-y1s_quant_fft = fft(y1shockpad_quant, n_points);
-y2s_quant_fft = fft(y2shockpad_quant, n_points);
+y1s_quant_fft = fft(y1shockpad_quant, n_fft);
+y2s_quant_fft = fft(y2shockpad_quant, n_fft);
 
 %% convert command values to binary representation
 % see page 45 of fft doc for values
-if n_points == 512
+if n_fft == 512
     n_points_b = 1001;
-elseif n_points == 1024
+elseif n_fft == 1024
     n_points_b = 1010;
-elseif n_points == 2048
+elseif n_fft == 2048
     n_points_b = 1011;
-elseif n_points == 4096
+elseif n_fft == 4096
     n_points_b = 1100;
-elseif n_points == 8192
+elseif n_fft == 8192
     n_points_b = 1101;
-elseif n_points == 16384
+elseif n_fft == 16384
     n_points_b = 1110;
-elseif n_points == 32768
+elseif n_fft == 32768
     n_points_b = 1111;
 else
     n_points_b = 1010;
@@ -89,24 +89,24 @@ cmdrst = bin2dec(strcat(num2str(0), num2str(fs_b), num2str(ram_initialized), num
 %% send command and wait for data
 fopen(s);
 fwrite(s, cmdrun, 'uint8');
-sdata = fread(s, (2 * n_points), 'int16'); % 
+sdata = fread(s, (2 * n_fft), 'int16'); % 
 fwrite(s, cmdrst, 'uint8');
 fclose(s);
 
 %% split real/imag parts, take magnitude
 a = 1;
 b = 1;
-fft_mag = zeros(n_points,1);
-fft_mag_shift = zeros(n_points,1);
-sdata_im = zeros(1,n_points);
-sdata_re = zeros(1,n_points);
+fft_mag = zeros(n_fft,1);
+fft_mag_shift = zeros(n_fft,1);
+sdata_im = zeros(1,n_fft);
+sdata_re = zeros(1,n_fft);
 
-for i = 1:2:(n_points*2) % *2
+for i = 1:2:(n_fft*2) % *2
     sdata_im(a) = sdata(i);
     a = a + 1;
 end
 
-for i = 2:2:(n_points*2) % *2
+for i = 2:2:(n_fft*2) % *2
     sdata_re(b) = sdata(i);
     b = b + 1;
 end

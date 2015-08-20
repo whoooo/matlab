@@ -15,7 +15,6 @@ plot_demo = 0;
 plot_samp_and_fp = 1;
 use_audiofile = 0;
 use_fingerprint = 1;
-scale = 262144;
 
 %% get matlab generated results to compare (from audio file)
 
@@ -150,7 +149,7 @@ sdata_im = zeros(1,n_fft);
 sdata_re = zeros(1,n_fft);
 
 for i = 1:2:(n_fft*2) 
-    sdata_im(a) = sdata(i);
+    sdata_im(a) = sdata(i).*1j;
     a = a + 1;
 end
 
@@ -193,6 +192,8 @@ end
 % subplot(3,1,3);
 % plot(index_corr, flip(fftshift(corr_fpga)));
 
+scale = 1;
+
 figure;
 subplot(3,1,1);
 plot(index_corr_mat, corr_mat./scale);
@@ -203,14 +204,7 @@ plot(index_corr, corr_man./scale);
 title('Manual xcorr- quantized');
 grid on;
 subplot(3,1,3);
-plot(index_corr, flip(fftshift(corr_fpga)));
-
+plot(index_corr, fftshift(corr_fpga).*2^15);
 grid on;
 title('FPGA xcorr');
-
-% if plot_samp_and_fp == 1 
-% 
-%     figure
-%     subplot(4,1,1)
-%     plot(
 

@@ -8,11 +8,11 @@ n_fft = 4096;
 samplelength = 2048;
 
 save_custom = 0;
-save_shots = 0;
+save_shots = 1;
 
 plot_t_orig = 0; % original time domain signals
 plot_custom = 0; % plot custom fingerprints
-plot_spectrum = 1;
+plot_spectrum = 0;
 plot_quant_comparisons = 0;
 
 file = 'Z:\jtobin\gunshots\FreeFirearmLibrary\rawLibrary\R_27.wav';
@@ -26,7 +26,7 @@ y1 = y(:,1);
 y2 = y(:,2);
 
 % Downsample
-fdes = 100000; % desired sampling frequency
+fdes = 48000; % desired sampling frequency
 y1 = resample(y1,fdes,fs);
 y2 = resample(y2,fdes,fs);
 
@@ -61,8 +61,8 @@ shock2nameT_mat = strcat('Z:\jtobin\gunshots\fingerprintLib\time_domain\mat_file
 % Shock wave arrives before muzzle blast if supersonic projectile passes by mic.
 % Reflected sounds are included in the following pieces.
 
-shockstart1 = 46500;
-shockstart2 = 46400;
+shockstart1 = 46500*fdes/100000; 
+shockstart2 = 46400*fdes/100000;
 
 y1shock = y1(shockstart1:(shockstart1+samplelength-1));
 y2shock = y2(shockstart2:(shockstart2+samplelength-1));
@@ -104,8 +104,8 @@ end
 %% create fingerprints
 
 % normalize and quantize 
-y1shock_quant = double(int16(y1shock/max(abs(y1shock)).*32768));
-y2shock_quant = double(int16(y2shock/max(abs(y2shock)).*32768));
+y1shock_quant = double(int16(y1shock/max(abs(y1shock)).*32767));
+y2shock_quant = double(int16(y2shock/max(abs(y2shock)).*32767));
 
 % zero pad sample to at least twice its length (up to n_fft in total length)
 zeropad = transpose(linspace(0, 0, n_fft - samplelength));
@@ -119,8 +119,8 @@ y1shock_fp = conj(y1shock_f);
 y2shock_fp = conj(y2shock_f);
 
 % quantize f domain conjugate
-y1shock_fp_quant = double(int16(y1shock_fp./max(abs(y1shock_fp)).*32768)); % add .
-y2shock_fp_quant = double(int16(y2shock_fp./max(abs(y2shock_fp)).*32768));
+y1shock_fp_quant = double(int16(y1shock_fp./max(abs(y1shock_fp)).*32767)); % add .
+y2shock_fp_quant = double(int16(y2shock_fp./max(abs(y2shock_fp)).*32767));
 
 % separate real and imaginary parts of fingerprint and convert to binary
 y1shock_fp_real_bin = dec2bin(typecast(int16(real(y1shock_fp_quant)),'uint16'));
@@ -143,7 +143,7 @@ if plot_spectrum == 1;
     title('Y1 shock FFT');
     
     subplot(4,1,2)
-    plot(index_f2, fftshift(abs(y2shock_f(1:length(y2shock_f)/2))));
+    plot(index_f2, abs(y2shock_f(1:length(y2shock_f)/2)));
     title('Y2 shock FFT');
     
     subplot(4,1,3)
@@ -244,31 +244,38 @@ zeropad_cfp = linspace(0, 0, n_fft - samplelength);
 index_custom = linspace(1,n_fft,n_fft);
 index_custom_f = fdes/2*linspace(0,1,n_fft);
 
-fp_dirac = linspace(0,0,samplelength);
-fp_dirac(samplelength/2) = 65536;
-fp_dirac = cat(2,fp_dirac,zeropad_cfp);
-dirac_fft = fft(fp_dirac, n_fft);
+dirac_t = linspace(0,0,samplelength);
+dirac_t(samplelength/2) = 65536;
+dirac_t = cat(2,dirac_t,zeropad_cfp);
+dirac_fft = fft(dirac_t, n_fft);
+dirac_fp = conj(dirac_fft);
+dirac_fp_quant = double(int16(dirac_fp./max(abs(dirac_fp)).*32768));
 
 
-fp_rect = linspace(0,0,samplelength);
-fp_rect(128:samplelength-128) = 65536;
-fp_rect = cat(2,fp_rect,zeropad_cfp);
-rect_fft = fft(fp_rect, n_fft);
+rect_t = linspace(0,0,samplelength);
+rect_t(128:samplelength-128) = 65536;
+rect_t = cat(2,rect_t,zeropad_cfp);
+rect_fft = fft(rect_t, n_fft);
+rect_fp = conj(rect_fft);
+rect_fp_quant = double(int16(rect_fp./max(abs(rect_fp)).*32768));
+
 
 if plot_custom == 1
     a = 4;
     b = 1;
     figure
     subplot(a,b,1)
-    plot(index_custom, fp_dirac);
+    plot(index_custom, dirac_t);
     title('Dirac Delta');
     subplot(a,b,2)
     plot(index_custom_f(1:length(index_custom_f)/2), abs(dirac_fft(1:length(dirac_fft)/2)));
+    title('FFT of Delta');
     subplot(a,b,3)
-    plot(index_custom, fp_rect);
-    title('Dirac Delta');
+    plot(index_custom, rect_t);
+    title('Boxcar');
     subplot(a,b,4)
     plot(index_custom_f(1:length(index_custom_f)/2), abs(rect_fft(1:length(rect_fft)/2)));  
+    title('FFT of Boxcar');
 end
 
 
