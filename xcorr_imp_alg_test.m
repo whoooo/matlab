@@ -7,12 +7,13 @@ clear all
 
 nfft = 4096; % actual number of samples taken will be 1/2 this, due to zero padding
 fs = 48000; % desired sampling frequency
-add_noise = 1;
+corrthresh = 8000;
+add_noise = 0;
 
 % gunshot files
 fingerprint = load('Z:\jtobin\gunshots\fingerprintLib\f_domain\mat_files\R_27_s1_2048_4096_48k.txt');
 fingerprint = fingerprint(:,1) + 1j.*fingerprint(:,2); % combine real and imaginary components 
-sample = 'Z:\jtobin\gunshots\FreeFirearmLibrary\rawLibrary\R_27.wav'; %s11
+sample = 'Z:\jtobin\gunshots\FreeFirearmLibrary\rawLibrary\I_15.wav'; %r27
 
 % additional noise file
 [z, fs_origZ] = audioread('Z:\jtobin\other_sounds\milan_traffic.wav');
@@ -27,7 +28,7 @@ sample = 'Z:\jtobin\gunshots\FreeFirearmLibrary\rawLibrary\R_27.wav'; %s11
 % Downsample
 ych1 = resample(y(:,1),fs,fs_origY);
 ych2 = resample(y(:,2),fs,fs_origY);
-% ych1 = awgn(ych1, 20);
+ych1 = awgn(ych1, 10);
 
 zch1 = resample(z(:,1), fs, fs_origZ);
 zch2 = resample(z(:,2), fs, fs_origZ);
@@ -37,15 +38,14 @@ zch2 = zch2(1:length(ych1));
 
 
 if add_noise == 1
-    ych1 = normalize(ych1,1) + normalize(zch1, .5);
-    ych2 = normalize(ych2,1) + normalize(zch2, .5);
+    ych1 = normalize(ych1,1) + normalize(zch1, .6);
+    ych2 = normalize(ych2,1) + normalize(zch2, .6);
 end
 
 % plot( linspace(1,length(zch1),length(zch1)), zch1);
 
 %% threshold based correlation detection
 
-corrthresh = 10000;
 corr_count1 = 1;
 corr_count2 = 1;
 zeropad = transpose(linspace(0, 0, nfft/2));
@@ -208,4 +208,5 @@ ylabel('Amplitude');
 % % grid on;
 % % xlabel('Correlation index');
 % % ylabel('Amplitude');
+
 

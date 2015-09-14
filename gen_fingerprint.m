@@ -8,7 +8,7 @@ n_fft = 4096;
 samplelength = 2048;
 
 save_custom = 0;
-save_shots = 1;
+save_shots = 0;
 
 plot_t_orig = 0; % original time domain signals
 plot_custom = 0; % plot custom fingerprints
@@ -74,6 +74,7 @@ index_shock = linspace(0,length(y1shock),length(y1shock));
 index_t = transpose(linspace(1,length(y1),length(y1)));
 index_f1 = transpose(fdes/2*linspace(0,1,n_fft/2));
 index_f2 = transpose(fdes/2*linspace(0,1,n_fft/2));
+index_fcomplete = transpose(fdes*linspace(0,1,n_fft));
 index_shock1 = transpose(linspace(shockstart1, shockstart1+samplelength, samplelength));
 index_shock2 = transpose(linspace(shockstart2, shockstart2+samplelength, samplelength));
 % index_muz1 = transpose(linspace(muzstart1, muzstart1+samplelength, samplelength));
@@ -134,7 +135,39 @@ y2s_fp = cell2mat(strcat(y2shock_fp_imag_bin, y2shock_fp_real_bin, {' '}));
 
 %% plot spectrums
 
+comp_y1_fft = abs(normalize(fft(y1shock, n_fft),1));
+comp_y1_quant_fft = abs(normalize(fft(y1shock_quant, n_fft),1));
+comp_y2_fft = abs(normalize(fft(y2shock, n_fft),1));
+comp_y2_quant_fft = abs(normalize(fft(y2shock_quant, n_fft),1));
+
+% rmse=sqrt(sum((data(:)-estimate(:)).^2)/numel(data));;
+rmse_ch1_fft =sqrt(sum((comp_y1_quant_fft(:)-comp_y1_fft(:)).^2)/numel(comp_y1_quant_fft));
+rmse_ch2_fft =sqrt(sum((comp_y2_quant_fft(:)-comp_y2_fft(:)).^2)/numel(comp_y2_quant_fft));
+
+
 if plot_spectrum == 1;
+    
+    figure
+    
+%     subplot(2,1,1)
+    plot(index_fcomplete,comp_y1_fft, 'r');
+    hold on;
+    plot(index_fcomplete,comp_y1_quant_fft, 'b');
+    xlim([0 20000]);
+    legend('FFT of Original Signal', 'FFT of Quantized Signal');
+    xlabel('Frequency (Hz)');
+    ylabel('Amplitude');
+    
+    figure
+    
+%     subplot(2,1,2)
+    plot(index_fcomplete, comp_y2_fft, 'r');
+    hold on;
+    plot(index_fcomplete,comp_y2_quant_fft, 'b');
+    xlim([0 20000]);
+    legend('FFT of Original Signal', 'FFT of Quantized Signal');
+    xlabel('Frequency (Hz)');
+    ylabel('Amplitude');
 
     figure
         
@@ -286,21 +319,34 @@ end
 
 if plot_quant_comparisons == 1
     
+    y1shock_norm = normalize(y1shock,1);
+    y1shock_quant_norm = normalize(y1shock_quant,1);
+    y2shock_norm = normalize(y2shock,1);
+    y2shock_quant_norm = normalize(y2shock_quant,1);   
+    
+    rmse_ch1_t =sqrt(sum((y1shock_norm(:)-y1shock_quant_norm(:)).^2)/numel(y1shock_norm));
+    rmse_ch2_t =sqrt(sum((y2shock_norm(:)-y2shock_quant_norm(:)).^2)/numel(y2shock_norm));
+
+      
     % compare quantized y1 signal to original (scaled to overlap)
-    scale_fact_t1 = max(abs(y1shock_quant))/max(abs(y1shock));
-    scaled_y1 = y1shock.* scale_fact_t1;
+%     scale_fact_t1 = max(abs(y1shock_quant))/max(abs(y1shock));
+%     scaled_y1 = y1shock.* scale_fact_t1;
     figure
-    plot(index_shock1, scaled_y1, 'b', index_shock1, y1shock_quant, 'r');
-    legend('Non quant/norm Y1', 'Quant/norm Y1')
-    title('Y1 T domain quantizattion comparison');
+    plot(index_shock1, y1shock_norm, 'r', index_shock1, y1shock_quant_norm, 'b');
+    legend('Original Signal', 'Quantized Signal')
+    xlabel('Sample Index');
+    ylabel('Amplitude');
+%     title('Y1 T domain quantizattion comparison');
     
     % compare quantized y2 signal to original (scaled to overlap)
-    scale_fact_t2 = max(abs(y2shock_quant))/max(abs(y2shock));
-    scaled_y2 = y2shock.* scale_fact_t2;
+%     scale_fact_t2 = max(abs(y2shock_quant))/max(abs(y2shock));
+%     scaled_y2 = y2shock.* scale_fact_t2;
     figure
-    plot(index_shock2, scaled_y2, 'b', index_shock2, y2shock_quant, 'r');
-    legend('Non quant/norm Y2', 'Quant/norm Y2')
-    title('Y2 T domain quantizattion comparison');
+    plot(index_shock2, y2shock_norm, 'r', index_shock2, y2shock_quant_norm, 'b');
+    legend('Original Signal', 'Quantized Signal')
+    xlabel('Sample Index');
+    ylabel('Amplitude');
+%     title('Y2 T domain quantizattion comparison');
     
     %  compare normalized and quantized version of y1 fingerprint to original
 %     figure;
@@ -326,80 +372,3 @@ if plot_quant_comparisons == 1
     legend('IFFT', 'Original');
     
 end;
-
-%% plot scaled and unscaled ffts
-% 
-% y1_fft = fft(y1shock);
-% y1_scaled_fft = fft(y1shock.*32768);
-% figure;
-% subplot(2,1,1)
-% plot(index_f1(1:1024), y1_fft);
-% subplot(2,1,2)
-% plot(index_f1(1:1024), y1_scaled_fft);
-
-%% plot
-% % use to set m and n of subplot
-% a = 3;
-% b = 2;
-% figure;
-% 
-% % ch1
-% subplot(a,b,1);
-% plot(index_t,y1);
-% title('\bf Ch1');
-% grid minor;
-% xlabel('Sample Index');
-% ylabel('Amplitude');
-% 
-% % ch2
-% subplot(a,b,2);
-% plot(index_t,y2);
-% title('\bf Ch2');
-% grid minor;
-% xlabel('Sample Index');
-% ylabel('Amplitude');
-% 
-% 
-% % y1 shock
-% subplot(a,b,3);
-% plot(index_shock1,y1shock);
-% title('\bf Ch 1 Shockwave');
-% grid minor;
-% xlabel('Sample Index');
-% ylabel('Amplitude');
-% xlim([min(index_shock1) max(index_shock1)]);
-% 
-% % y1 muz
-% subplot(a,b,5);
-% plot(index_muz1,y1muz);
-% title('\bf Ch 1 Muzzleblast');
-% grid minor;
-% xlabel('Sample Index');
-% ylabel('Amplitude');
-% xlim([min(index_muz1) max(index_muz1)]);
-% 
-% % y2 shock
-% subplot(a,b,4);
-% plot(index_shock2,y2shock);
-% title('\bf Ch 2 Shockwave');
-% grid minor;
-% xlabel('Sample Index');
-% ylabel('Amplitude');
-% xlim([min(index_shock2) max(index_shock2)]);
-% 
-% % y2 muz
-% subplot(a,b,6);
-% plot(index_muz2,y2muz);
-% title('\bf Ch 2 Muzzleblast');
-% grid minor;
-% xlabel('Sample Index');
-% ylabel('Amplitude');
-% xlim([min(index_muz2) max(index_muz2)]);
-% 
-% % y1 shock fft
-% subplot(a,b,4);
-% plot(index_croppedfft(1:floor(2*length(index_croppedfft)/5)), abs(y1shockfft(1:floor(2*length(index_croppedfft)/5))));
-% title('\bf Sample 1 Shockwave FFT');
-% grid minor;
-% xlabel('Frequency');
-% ylabel('Amplitude');
