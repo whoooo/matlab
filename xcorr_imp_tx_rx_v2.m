@@ -7,10 +7,12 @@ clear all;
 
 %% set n_fft, run/rst, ram initialized, and sampling frequency 
 n_samples = 2048;
-n_fft = 4096;
-run = '1'; % reset = 1 if run = 0
-ram_initialized = '1';
-fs = 100000;
+n_fft = n_samples * 2;
+run = '1';
+run_once = '0';
+rst = '0';
+use_adc = '1';
+fs = 48000;
 plot_result = 1;
 plot_demo = 0;
 plot_samp_and_fp = 1;
@@ -79,14 +81,14 @@ end
 if use_fingerprint == 1
     
     % original time domain sample of fingerprint to use for matlab correlation
-    fingerprint_t = transpose(load('Z:\jtobin\gunshots\fingerprintLib\time_domain\mat_files\R_27_s1_2048_100k.txt'));
+    fingerprint_t = transpose(load('Z:\jtobin\gunshots\fingerprintLib\time_domain\mat_files\R_27_s2_2048_48k.txt'));
     
     % fingerprint. conj(fft(fingerprint_t)) 
-    fingerprint = load('Z:\jtobin\gunshots\fingerprintLib\f_domain\mat_files\R_27_s1_2048_4096_100k.txt'); % generated fingerprint file
+    fingerprint = load('Z:\jtobin\gunshots\fingerprintLib\f_domain\mat_files\R_27_s2_2048_4096_48k.txt'); % generated fingerprint file
     fingerprint = fingerprint(:,1) + 1j.*fingerprint(:,2); % combine real and imaginary components 
     
     % time domain signal which is combined with fingerprint for xcorr
-    sample = transpose(load('Z:\jtobin\gunshots\fingerprintLib\time_domain\mat_files\R_27_s2_2048_100k.txt')); 
+    sample = transpose(load('Z:\jtobin\gunshots\fingerprintLib\time_domain\mat_files\R_27_s1_2048_48k.txt')); 
     sample_f = fft(sample, n_fft);                                                                           
 
     corr_man = ifftshift(ifft(sample_f.*fingerprint));
@@ -101,34 +103,30 @@ index_corr = linspace(1,n_fft-1,n_fft-1);
 index_corr_mat = linspace(1,n_fft-1,n_fft-1);
 
 %% convert values to binary representation
+
+if (run == '1') && (rst == '1')
+    run = '0';
+    rst = '0';
+    disp('Run and rst both set to 1');
+end
+
 % see page 45 of fft doc for values
-if n_samples == 1024
+if n_samples == 256
     n_points_b = '000';
-elseif n_samples == 2048
+elseif n_samples == 512
     n_points_b = '001';
-elseif n_samples == 4096
+elseif n_samples == 1024
     n_points_b = '010';
-elseif n_samples == 8192
+elseif n_samples == 2048
     n_points_b = '011';
-elseif n_samples == 16384
+elseif n_samples == 4096
     n_points_b = '100';
 else
-    n_points_b = '010';
+    n_points_b = '100';
 end
 
-if n_fft == 2048
-    n_fft_b = '000';
-elseif n_fft == 4096
-    n_fft_b = '001';
-elseif n_fft == 8192
-    n_fft_b = '010';
-elseif n_fft == 16384
-    n_fft_b = '011';
-else
-    n_fft_b = '010';
-end
-
-cmd = bin2dec(strcat(run, ram_initialized, n_points_b, n_fft_b));
+cmd_config = bin2dec(strcat('0', '0', use_adc, run_once, n_points_b, '0'));
+cmd = bin2dec(strcat(run, rst, use_adc, run_once, n_points_b, '0'));
 
 %% serial comms
 s = serial('COM6');
@@ -138,6 +136,7 @@ set(s, 'OutputBufferSize', 1);
 set(s, 'Timeout', 10);
 set(s, 'ByteOrder', 'bigEndian');
 fopen(s);
+fwrite(s, cmd_config, 'uint8');
 fwrite(s, cmd, 'uint8');
 sdata = fread(s, (n_fft*2), 'int32'); % 32 bits of [n_fft_points * 2 (real+imag components)] values
 % cmd = bin2dec(strcat('0', ram_initialized, n_points_b, n_fft_b));

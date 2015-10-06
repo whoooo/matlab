@@ -4,18 +4,24 @@ clear all
 
 fs = 44100;
 nfft = 32768;
-sample_start = 4000;
+sample_start = 1;
 
-[y, fs_orig] = audioread('Z:\jtobin\other_sounds\breaking-glass-1.wav');
-plot_title = 'breaking-glass-1.wav';
+% [y, fs_orig] = audioread('Z:\jtobin\other_sounds\breaking-glass-1.wav');
+% [y, fs_orig] = audioread('Z:\jtobin\other_sounds\breaking_window_indoors.wav');
+[y, fs_orig] = audioread('Z:\jtobin\other_sounds\breaking_glass_sheet1.flac');
+
+% plot_title = 'breaking-glass-1.wav';
+% plot_title = 'breaking window indoors.wav';
+plot_title = 'breaking glass sheet1.flac';
+
 ych1 = resample(y(:,1), fs, fs_orig);
-ych2 = resample(y(:,2), fs, fs_orig);
+% ych2 = resample(y(:,2), fs, fs_orig);
 
 ych1 = ych1(sample_start:sample_start + nfft);
-ych2 = ych2(sample_start:sample_start + nfft);
+% ych2 = ych2(sample_start:sample_start + nfft);
 
 ych1_fft = fft(ych1, nfft);
-ych2_fft = fft(ych2, nfft);
+% ych2_fft = fft(ych2, nfft);
 
 index_t = 1000/fs.*linspace(1,length(ych1),length(ych1));
 index_f = transpose(fs/2*linspace(0,1,nfft));
