@@ -32,7 +32,7 @@ header = fp_temp(1,1:64);
 fp_data = strcat(header, fp_data);
 
 % get n_samples, nfft, and sampling rate for filename
-fp_desc_ind = strfind(temp_fp_loc, '_s')
+fp_desc_ind = strfind(temp_fp_loc, '_s');
 fp_desc = temp_fp_loc(fp_desc_ind(1) + 1 : end);
 
 % concatenate shot names (R_27, A_33, etc)
@@ -42,7 +42,7 @@ for i = 1 : n_fp
 end
 
 % file name to be saved
-save_loc = 'Z:\jtobin\gunshots\fingerprintLib\f_domain\combinations\'
+save_loc = 'Z:\jtobin\gunshots\fingerprintLib\f_domain\combinations\';
 fp_name = strcat(save_loc, shot_names, fp_desc);
 
 % write data to file 

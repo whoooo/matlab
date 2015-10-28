@@ -11,7 +11,7 @@ n_fft = n_samples * 2;
 run = '1';
 run_once = '0';
 rst = '0';
-use_adc = '1';
+use_adc = '0';
 fs = 48000;
 plot_result = 1;
 plot_demo = 0;
@@ -81,10 +81,10 @@ end
 if use_fingerprint == 1
     
     % original time domain sample of fingerprint to use for matlab correlation
-    fingerprint_t = transpose(load('Z:\jtobin\gunshots\fingerprintLib\time_domain\mat_files\R_27_s2_2048_48k.txt'));
+    fingerprint_t = transpose(load('Z:\jtobin\gunshots\fingerprintLib\time_domain\mat_files\A_33_s1_2048_48k.txt'));
     
     % fingerprint. conj(fft(fingerprint_t)) 
-    fingerprint = load('Z:\jtobin\gunshots\fingerprintLib\f_domain\mat_files\R_27_s2_2048_4096_48k.txt'); % generated fingerprint file
+    fingerprint = load('Z:\jtobin\gunshots\fingerprintLib\f_domain\mat_files\A_33_s1_2048_4096_48k.txt'); % generated fingerprint file
     fingerprint = fingerprint(:,1) + 1j.*fingerprint(:,2); % combine real and imaginary components 
     
     % time domain signal which is combined with fingerprint for xcorr

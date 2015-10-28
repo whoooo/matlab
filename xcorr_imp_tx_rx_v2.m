@@ -1,3 +1,5 @@
+% for use with xcorr_imp_test_loop_mult_fp (top, not topv2)
+
 clear all;
 
 % matlab automatically pads to next power of two size when doing corr
@@ -81,10 +83,10 @@ end
 if use_fingerprint == 1
     
     % original time domain sample of fingerprint to use for matlab correlation
-    fingerprint_t = transpose(load('Z:\jtobin\gunshots\fingerprintLib\time_domain\mat_files\R_27_s2_2048_48k.txt'));
+    fingerprint_t = transpose(load('Z:\jtobin\gunshots\fingerprintLib\time_domain\mat_files\A_33_s1_2048_48k.txt'));
     
     % fingerprint. conj(fft(fingerprint_t)) 
-    fingerprint = load('Z:\jtobin\gunshots\fingerprintLib\f_domain\mat_files\R_27_s2_2048_4096_48k.txt'); % generated fingerprint file
+    fingerprint = load('Z:\jtobin\gunshots\fingerprintLib\f_domain\mat_files\A_33_s1_2048_4096_48k.txt'); % generated fingerprint file
     fingerprint = fingerprint(:,1) + 1j.*fingerprint(:,2); % combine real and imaginary components 
     
     % time domain signal which is combined with fingerprint for xcorr
