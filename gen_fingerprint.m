@@ -8,14 +8,14 @@ n_fft = 4096;
 samplelength = 2048;
 
 save_custom = 0;
-save_shots = 0;
+save_shots = 1;
 
-plot_t_orig = 0; % original time domain signals
-plot_custom = 1; % plot custom fingerprints
+plot_t_orig = 1; % original time domain signals
+plot_custom = 0; % plot custom fingerprints
 plot_spectrum = 0;
 plot_quant_comparisons = 0;
 
-file = 'Z:\jtobin\gunshots\FreeFirearmLibrary\rawLibrary\Q_21.wav';
+file = 'Z:\jtobin\gunshots\FreeFirearmLibrary\rawLibrary\Q_30.wav';
 
 %% Read and resample data. 
 
@@ -61,8 +61,8 @@ shock2nameT_mat = strcat('Z:\jtobin\gunshots\fingerprintLib\time_domain\mat_file
 % Shock wave arrives before muzzle blast if supersonic projectile passes by mic.
 % Reflected sounds are included in the following pieces.
 
-shockstart1 = 48000;%46500*fdes/fs; 
-shockstart2 = 48000;%*fdes/fs;
+shockstart1 = 16000;%46500*fdes/fs; 
+shockstart2 = 16000;%*fdes/fs;
 
 y1shock = y1(shockstart1:(shockstart1+samplelength-1));
 y2shock = y2(shockstart2:(shockstart2+samplelength-1));

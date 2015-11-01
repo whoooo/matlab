@@ -2,34 +2,27 @@
 clear all
 
 % number of fingerprints to combine
-n_fp = 20;
+n_fp = 4;
 
-% has trouble with s2?
 folder = 'Z:\jtobin\gunshots\fingerprintLib\f_domain\';
 fp_loc(1,:) = strcat(folder, 'A_33_s1_2048_4096_48k.coe');
-fp_loc(2,:) = strcat(folder, 'W_27_s1_2048_4096_48k.coe');
-fp_loc(3,:) = strcat(folder, 'B_23_s1_2048_4096_48k.coe');
-fp_loc(4,:) = strcat(folder, 'B_23_s1_2048_4096_48k.coe');
-fp_loc(5,:) = strcat(folder, 'E_21_s1_2048_4096_48k.coe');
-fp_loc(6,:) = strcat(folder, 'E_21_s1_2048_4096_48k.coe');
-fp_loc(7,:) = strcat(folder, 'F_46_s1_2048_4096_48k.coe');
-fp_loc(8,:) = strcat(folder, 'F_46_s1_2048_4096_48k.coe');
-fp_loc(9,:) = strcat(folder, 'J_0._s1_2048_4096_48k.coe');
+fp_loc(2,:) = strcat(folder, 'J_0._s1_2048_4096_48k.coe');
+fp_loc(3,:) = strcat(folder, 'Q_21_s1_2048_4096_48k.coe');
+fp_loc(4,:) = strcat(folder, 'R_27_s1_2048_4096_48k.coe');
+fp_loc(5,:) = strcat(folder, 'A_33_s1_2048_4096_48k.coe');
+fp_loc(6,:) = strcat(folder, 'J_0._s1_2048_4096_48k.coe');
+fp_loc(7,:) = strcat(folder, 'Q_21_s1_2048_4096_48k.coe');
+fp_loc(8,:) = strcat(folder, 'R_27_s1_2048_4096_48k.coe');
+fp_loc(9,:) = strcat(folder, 'A_33_s1_2048_4096_48k.coe');
 fp_loc(10,:) = strcat(folder, 'J_0._s1_2048_4096_48k.coe');
-fp_loc(11,:) = strcat(folder, 'L_21_s1_2048_4096_48k.coe');
-fp_loc(12,:) = strcat(folder, 'L_21_s1_2048_4096_48k.coe');
-fp_loc(13,:) = strcat(folder, 'Q_21_s1_2048_4096_48k.coe');
-fp_loc(14,:) = strcat(folder, 'Q_21_s1_2048_4096_48k.coe');
-fp_loc(15,:) = strcat(folder, 'R_27_s1_2048_4096_48k.coe');
-fp_loc(16,:) = strcat(folder, 'R_27_s1_2048_4096_48k.coe');
-fp_loc(17,:) = strcat(folder, 'S_16_s1_2048_4096_48k.coe');
-fp_loc(18,:) = strcat(folder, 'S_16_s1_2048_4096_48k.coe');
-fp_loc(19,:) = strcat(folder, 'V_25_s1_2048_4096_48k.coe');
-fp_loc(20,:) = strcat(folder, 'V_25_s1_2048_4096_48k.coe');
+fp_loc(11,:) = strcat(folder, 'Q_21_s1_2048_4096_48k.coe');
+fp_loc(12,:) = strcat(folder, 'R_27_s1_2048_4096_48k.coe');
+fp_loc(13,:) = strcat(folder, 'A_33_s1_2048_4096_48k.coe');
+fp_loc(14,:) = strcat(folder, 'J_0._s1_2048_4096_48k.coe');
+fp_loc(1,:) = strcat(folder, 'Q_21_s1_2048_4096_48k.coe');
+fp_loc(4,:) = strcat(folder, 'R_27_s1_2048_4096_48k.coe');
 % initialize array
 fp_data(:, 1) = zeros;
-% shot_name(n_fp,:) = zeros;
-% fp_temp(n_fp,:) = zeros;
 
 % store shot name, open file, read in binary fingerprint data, concatenate with other fingerprints. repeat
 for i = 1 : n_fp    
