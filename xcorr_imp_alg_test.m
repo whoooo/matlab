@@ -9,6 +9,9 @@ nfft = 4096; % actual number of samples taken will be 1/2 this, due to zero padd
 fs = 48000; % desired sampling frequency
 corrthresh = 8000;
 add_noise = 0;
+add_awgn = 1;
+plot_ch1 = 1;
+plot_ch2 = 0;
 
 % gunshot files
 fingerprint = load('Z:\jtobin\gunshots\fingerprintLib\f_domain\mat_files\R_27_s1_2048_4096_48k.txt');
@@ -28,7 +31,10 @@ sample = 'Z:\jtobin\gunshots\FreeFirearmLibrary\rawLibrary\I_15.wav'; %r27
 % Downsample
 ych1 = resample(y(:,1),fs,fs_origY);
 ych2 = resample(y(:,2),fs,fs_origY);
-ych1 = awgn(ych1, 10);
+
+if add_awgn == 1
+    ych1 = awgn(ych1, 10);
+end
 
 zch1 = resample(z(:,1), fs, fs_origZ);
 zch2 = resample(z(:,2), fs, fs_origZ);
@@ -87,87 +93,104 @@ index_fp = transpose(linspace(1,length(fingerprint),length(fingerprint)));
 
 
 %% plot ch1 results
-figure;
-a = 3;
-b = 2;
 
-% ych1 time domain
-subplot(a,b,[1,2]);
-plot(index_t, ych1, 'b',...
-    matches_index1, matches_sample1, 'r');
-title('\bf Channel 1');
-grid on;
-xlim([1 length(ych1)])
-xlabel('Index');
-ylabel('Amplitude');
+if plot_ch1 == 1
+    figure;
+    a = 3;
+    b = 2;
 
-% correlation at match
-subplot(a,b,[3,4]);
-plot(index_corr1, matches_corr1);
-title('\bf Correlation at match');
-grid on;
-xlim([1 length(ych1)])
-xlabel('Correlation index');
-ylabel('Amplitude');
+    % ych1 time domain
+    subplot(a,b,[1,2]);
+    plot(index_t, ych1, 'b',...
+        matches_index1, matches_sample1, 'r', 'LineWidth', 1.5);
+    title('\bf Channel 1');
+    grid on;
+    xlim([1 length(ych1)])
+    xlabel('Index');
+    ylabel('Amplitude');
+    set(gca,'FontSize',20)
+    set(findall(gcf,'type','text'),'FontSize',26)
+    legend('Sample','Match')
 
-% fingerprint t domain
-subplot(a,b,5);
-plot(index_fp,ifft(conj(fingerprint), nfft));
-title('\bf Fingerprint');
-grid on;
-xlabel('Sample index');
-ylabel('Amplitude');
+%     % correlation at match
+%     subplot(a,b,[3,4]);
+%     plot(index_corr1, matches_corr1);
+%     title('\bf Correlation at match');
+%     grid on;
+%     xlim([1 length(ych1)])
+%     xlabel('Correlation index');
+%     ylabel('Amplitude');
+%     set(gca,'FontSize',18)
+%     set(findall(gcf,'type','text'),'FontSize',18)
 
-% fingerprint f domain
-subplot(a,b,6);
-plot(index_f(1:floor(2*length(index_f)/5)), abs(normalize(fingerprint(1:floor(2*length(index_f)/5)),1)), 'b',...
-    index_f(1:floor(2*length(index_f)/5)), abs(normalize(matches_fft1(1:floor(2*length(index_f)/5)),1)), 'r');
-title('\bf Fingerprint/Match FFT');
-grid on;
-xlabel('Frequency');
-ylabel('Amplitude');
+    % fingerprint t domain
+    t_plot = ifft(conj(fingerprint), nfft);
+    subplot(a,b,[3,5]);
+    plot(index_fp(1:nfft/5), t_plot(1:nfft/5), 'LineWidth', 1.5);
+    title('\bf Fingerprint');
+    grid on;
+    xlabel('Sample index');
+    ylabel('Amplitude');
+    set(gca,'FontSize',20)
+    set(findall(gcf,'type','text'),'FontSize',26)
+
+    % fingerprint f domain
+    subplot(a,b,[4,6]);
+    plot(index_f(1:floor(2*length(index_f)/10)), abs(normalize(fingerprint(1:floor(2*length(index_f)/10)),1)), 'b',...
+        index_f(1:floor(2*length(index_f)/10)), abs(normalize(matches_fft1(1:floor(2*length(index_f)/10)),1)), 'r', 'LineWidth', 1.5);
+    title('\bf Fingerprint/Match FFT');
+    grid on;
+    xlabel('Frequency');
+    ylabel('Amplitude');   
+    set(gca,'FontSize',20)
+    set(findall(gcf,'type','text'),'FontSize',26)
+    legend('Sample','Match')
+
+end
 
 %% plot ch2 results
-figure;
-a = 3;
-b = 2;
 
-% ych2 time domain
-subplot(a,b,[1,2]);
-plot(index_t, ych2, 'b',...
-    matches_index2, matches_sample2, 'r');
-title('\bf Channel 2');
-grid on;
-xlim([1 length(ych2)])
-xlabel('Index');
-ylabel('Amplitude');
+if plot_ch2 == 1
+    figure;
+    a = 3;
+    b = 2;
 
-% correlation at match
-subplot(a,b,[3,4]);
-plot(index_corr2, matches_corr2);
-title('\bf Correlation at match');
-grid on;
-xlim([1 length(ych2)])
-xlabel('Correlation index');
-ylabel('Amplitude');
+    % ych2 time domain
+    subplot(a,b,[1,2]);
+    plot(index_t, ych2, 'b',...
+        matches_index2, matches_sample2, 'r');
+    title('\bf Channel 2');
+    grid on;
+    xlim([1 length(ych2)])
+    xlabel('Index');
+    ylabel('Amplitude');
 
-% fingerprint t domain
-subplot(a,b,5);
-plot(index_fp,ifft(conj(fingerprint), nfft));
-title('\bf Fingerprint');
-grid on;
-xlabel('Sample index');
-ylabel('Amplitude');
+    % correlation at match
+    subplot(a,b,[3,4]);
+    plot(index_corr2, matches_corr2);
+    title('\bf Correlation at match');
+    grid on;
+    xlim([1 length(ych2)])
+    xlabel('Correlation index');
+    ylabel('Amplitude');
 
-% fingerprint f domain
-subplot(a,b,6);
-plot(index_f(1:floor(2*length(index_f)/5)), abs(normalize(fingerprint(1:floor(2*length(index_f)/5)),1)), 'b',...
-    index_f(1:floor(2*length(index_f)/5)), abs(normalize(matches_fft2(1:floor(2*length(index_f)/5)),1)), 'r');
-title('\bf Fingerprint/Match FFT');
-grid on;
-xlabel('Frequency');
-ylabel('Amplitude');
+    % fingerprint t domain
+    subplot(a,b,5);
+    plot(index_fp,ifft(conj(fingerprint), nfft));
+    title('\bf Fingerprint');
+    grid on;
+    xlabel('Sample index');
+    ylabel('Amplitude');
 
+    % fingerprint f domain
+    subplot(a,b,6);
+    plot(index_f(1:floor(2*length(index_f)/5)), abs(normalize(fingerprint(1:floor(2*length(index_f)/5)),1)), 'b',...
+        index_f(1:floor(2*length(index_f)/5)), abs(normalize(matches_fft2(1:floor(2*length(index_f)/5)),1)), 'r');
+    title('\bf Fingerprint/Match FFT');
+    grid on;
+    xlabel('Frequency');
+    ylabel('Amplitude');
+end
 
 %% plot ch2 results
 % figure;

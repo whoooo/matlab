@@ -8,7 +8,7 @@ clockcycles = [0 0 0 0];
 
 for i = 1 : 4
     for j = 1 : 250
-     clockcycles(j,i) = 1*nfft(i) + fftcycles(i) + n_fingerprints(j)*( 1*nfft(i) + fftcycles(i) );
+     clockcycles(j,i) = 2*nfft(i) + fftcycles(i) + n_fingerprints(j)*( 2*nfft(i) + fftcycles(i) );
     end
 end
 

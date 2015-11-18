@@ -15,7 +15,7 @@ plot_custom = 0; % plot custom fingerprints
 plot_spectrum = 1;
 plot_quant_comparisons = 0;
 
-file = 'Z:\jtobin\gunshots\FreeFirearmLibrary\rawLibrary\Q_30.wav';
+file = 'Z:\jtobin\gunshots\FreeFirearmLibrary\rawLibrary\X_39.wav';
 % file = 'Z:\jtobin\other_sounds\breaking_window_indoors.wav';
 % file = 'Z:\jtobin\other_sounds\breaking-glass-1.wav';
 
@@ -65,8 +65,8 @@ shock2nameT_mat = strcat('Z:\jtobin\gunshots\fingerprintLib\time_domain\mat_file
 % Shock wave arrives before muzzle blast if supersonic projectile passes by mic.
 % Reflected sounds are included in the following pieces.
 
-shockstart1 = 16000;%46500*fdes/fs; 
-shockstart2 = 16000;%*fdes/fs;
+shockstart1 = 67500;%46500*fdes/fs; 
+shockstart2 = 67500;%*fdes/fs;
 
 y1shock = y1(shockstart1:(shockstart1+samplelength-1));
 y2shock = y2(shockstart2:(shockstart2+samplelength-1));
@@ -169,8 +169,6 @@ if plot_spectrum == 1;
 %     legend('FFT of Original Signal', 'FFT of Quantized Signal');
     xlabel('Frequency (Hz)');
     ylabel('Amplitude');
-    set(gca,'FontSize',18)
-    set(findall(gcf,'type','text'),'FontSize',18)
     
     figure
     
@@ -182,8 +180,6 @@ if plot_spectrum == 1;
 %     legend('FFT of Original Signal', 'FFT of Quantized Signal');
     xlabel('Frequency (Hz)');
     ylabel('Amplitude');
-    set(gca,'FontSize',18)
-    set(findall(gcf,'type','text'),'FontSize',18)
 
 %     figure
 %         
